@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <pattern id="g" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#ff8a4f" stroke-opacity=".18" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="#141c20"/>
+  <rect width="512" height="512" rx="96" fill="url(#g)"/>
+  <path d="M318 112c-34-30-82-10-86 44l-18 214c-4 52-52 70-86 40" fill="none" stroke="#ff8a4f" stroke-width="44" stroke-linecap="round"/>
+  <path d="M300 300c30-60 60-100 110-110" fill="none" stroke="#86a8ff" stroke-width="20" stroke-linecap="round"/>
+  <circle cx="410" cy="190" r="22" fill="#86a8ff"/>
+</svg>

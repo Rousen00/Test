@@ -1,0 +1,18 @@
+{
+  "name": "math-tutor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Репетитор по высшей математике по методичке «В гостях у высшей математики» (НГТУ): регистрация, прогресс, рейтинг, PWA.",
+  "type": "module",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "share": "node share.js"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "^1.3.0"
+  }
+}
