@@ -67,14 +67,25 @@ async function findCloudflared() {
 async function startTunnel() {
   const exe = await findCloudflared();
   console.log("\nОткрываю доступ из интернета…");
-  const child = spawn(exe, ["tunnel", "--no-autoupdate", "--url", `http://localhost:${PORT}`], { stdio: ["ignore", "pipe", "pipe"] });
+  // 127.0.0.1, а не localhost: в Windows localhost может уйти на IPv6 (::1), где сервер не слушает → 502
+  // http2 (TCP 443) вместо QUIC (UDP): QUIC часто режут провайдеры, туннель от этого то работает, то нет
+  const protocol = process.env.TUNNEL_PROTOCOL || "http2";
+  const child = spawn(exe, ["tunnel", "--no-autoupdate", "--protocol", protocol, "--url", `http://127.0.0.1:${PORT}`], { stdio: ["ignore", "pipe", "pipe"] });
   let announced = false;
+  const tail = [];
   const onData = buf => {
-    const m = String(buf).match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/);
+    const s = String(buf);
+    // api.trycloudflare.com — служебный адрес из сообщений об ошибках, не ссылка туннеля
+    const m = s.match(/https:\/\/(?!api\.)[a-z0-9-]+\.trycloudflare\.com/);
     if (m && !announced) { announced = true; announce(m[0]); }
+    for (const line of s.split(/\r?\n/)) {
+      if (!line.trim()) continue;
+      tail.push(line); if (tail.length > 10) tail.shift();
+      if (/\bERR\b/.test(line)) console.error("[туннель] " + line);
+    }
   };
   child.stdout.on("data", onData); child.stderr.on("data", onData);
-  child.on("exit", code => { if (!stopping) console.error(`\nТуннель остановился (код ${code}). Перезапустите программу, чтобы получить новую ссылку.`); });
+  child.on("exit", code => { if (!stopping) console.error(`\nТуннель остановился (код ${code}). Перезапустите программу, чтобы получить новую ссылку.\nПоследние сообщения cloudflared:\n${tail.join("\n")}`); });
   let stopping = false;
   const stop = () => { stopping = true; child.kill(); };
   process.on("SIGINT", stop); process.on("SIGTERM", stop); process.on("exit", stop);

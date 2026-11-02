@@ -99,7 +99,10 @@ function readJson(req, limit = 256 * 1024) {
     req.on("error", reject);
   });
 }
-const publicUser = u => ({ id: u.id, login: u.login, name: u.name });
+const publicUser = u => ({ id: u.id, login: u.login, name: u.name, avatar: u.avatar || null });
+// аватар — маленькая картинка, которую браузер уже ужал до 128×128
+const AVATAR_RE = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/;
+const AVATAR_MAX = 60 * 1024;
 
 /* ---------------- рейтинг ---------------- */
 function boardRow(uid) {
@@ -109,7 +112,7 @@ function boardRow(uid) {
   const days = new Set(s.days || []); let streak = 0; const d = new Date();
   if (!days.has(d.toISOString().slice(0, 10))) d.setDate(d.getDate() - 1); // вчерашняя серия ещё не прервана
   while (days.has(d.toISOString().slice(0, 10))) { streak++; d.setDate(d.getDate() - 1); }
-  return { id: uid, name: u.name, xp: +s.xp || 0, solved: ok, tries, best, streak };
+  return { id: uid, name: u.name, avatar: u.avatar || null, xp: +s.xp || 0, solved: ok, tries, best, streak };
 }
 
 /* ---------------- Алиса (Claude API) ---------------- */
@@ -118,12 +121,17 @@ if (process.env.ANTHROPIC_API_KEY) {
   try { const { default: Anthropic } = await import("@anthropic-ai/sdk"); anthropic = new Anthropic(); }
   catch (e) { console.warn("ANTHROPIC_API_KEY задан, но пакет @anthropic-ai/sdk не установлен (npm install). Алиса отключена."); }
 }
+// локальная модель через Ollama — если нет ключа Claude, но задан OLLAMA_MODEL
+const OLLAMA_MODEL = !anthropic && process.env.OLLAMA_MODEL || "";
+const OLLAMA_URL = (process.env.OLLAMA_URL || "http://127.0.0.1:11434").replace(/\/$/, "");
+const tutorOn = () => !!(anthropic || OLLAMA_MODEL);
+const tutorLabel = () => anthropic ? "включена, " + MODEL : OLLAMA_MODEL ? "включена, Ollama " + OLLAMA_MODEL : "выключена";
 const tutorSystem = ctx => `Ты — Алиса, дружелюбный репетитор по высшей математике для студентов технического вуза. Ты опираешься на методичку А. А. Нуятова «В гостях у высшей математики» (НГТУ им. Р. Е. Алексеева, 2025).
 ${ctx}
 Правила: отвечай по-русски, коротко и по шагам; формулы пиши в LaTeX внутри $...$ (строчные) или $$...$$ (выносные); используй обозначения российской традиции (tg, ctg, arctg). Если студент просит решить задачу, сначала дай наводящую подсказку и спроси, хочет ли он полное решение. Если находишь ошибку в рассуждениях — укажи место ошибки. Не выдумывай номера страниц и теорем методички. На вопросы не по математике мягко возвращай к учёбе.`;
 
 async function tutor(req, res, user) {
-  if (!anthropic) return send(res, 503, { error: "Алиса не настроена на сервере." });
+  if (!tutorOn()) return send(res, 503, { error: "Алиса не настроена на сервере." });
   if (limited("tutor:" + user.id, 40, 3600e3)) return send(res, 429, { error: "Слишком много вопросов за час. Сделайте перерыв и спросите позже." });
   const body = await readJson(req, 128 * 1024);
   const ctx = String(body.context || "").slice(0, 800);
@@ -137,6 +145,7 @@ async function tutor(req, res, user) {
 
   const hint = body.mode === "hint";
   const system = tutorSystem(ctx) + (hint ? "\n\nРежим подсказки: дай ОДНУ короткую наводящую подсказку (2–4 предложения) — с какой формулы или шага начать. Не называй ответ, не выполняй вычисления до конца и не пиши полное решение, даже если студент об этом просит." : "");
+  if (!anthropic) return tutorOllama(req, res, system, merged, hint);
   const params = { model: MODEL, max_tokens: hint ? 600 : 4000, system, messages: merged, output_config: { effort: "low" } };
   if (FALLBACK_MODELS.has(MODEL)) { params.betas = ["server-side-fallback-2026-07-01"]; params.fallbacks = "default"; }
   const stream = anthropic.beta.messages.stream(params);
@@ -154,13 +163,51 @@ async function tutor(req, res, user) {
   res.end();
 }
 
+// Ollama отдаёт ответ потоком: одна JSON-строка на кусок текста
+async function tutorOllama(req, res, system, messages, hint) {
+  const ac = new AbortController();
+  req.on("close", () => { if (!res.writableEnded) ac.abort(); });
+  let r;
+  try {
+    r = await fetch(OLLAMA_URL + "/api/chat", {
+      method: "POST", headers: { "Content-Type": "application/json" }, signal: ac.signal,
+      body: JSON.stringify({ model: OLLAMA_MODEL, stream: true, think: false, keep_alive: "30m", messages: [{ role: "system", content: system }, ...messages], options: { num_predict: hint ? 400 : 2000, temperature: 0.4 } })
+    });
+  } catch (e) {
+    if (e.name !== "AbortError") console.error("Ollama недоступна:", e.message);
+    return send(res, 503, { error: "Алиса сейчас недоступна: на сервере не запущена Ollama." });
+  }
+  if (!r.ok) {
+    const t = await r.text().catch(() => ""); console.error("Ошибка Ollama:", r.status, t.slice(0, 300));
+    return send(res, 502, { error: r.status === 404 ? `Модель ${OLLAMA_MODEL} не скачана (ollama pull ${OLLAMA_MODEL}).` : "Алиса не смогла ответить." });
+  }
+  res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "X-Accel-Buffering": "no" });
+  const dec = new TextDecoder(); let buf = "", cut = false;
+  try {
+    for await (const chunk of r.body) {
+      buf += dec.decode(chunk, { stream: true }); let i;
+      while ((i = buf.indexOf("\n")) >= 0) {
+        const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1); if (!line) continue;
+        const ev = JSON.parse(line);
+        if (ev.error) throw new Error(ev.error);
+        if (ev.message && ev.message.content) res.write(ev.message.content);
+        if (ev.done && ev.done_reason === "length") cut = true;
+      }
+    }
+    if (cut) res.write("\n\n(ответ обрезан — попроси продолжить)");
+  } catch (e) {
+    if (e.name !== "AbortError") { console.error("Ошибка Ollama:", e.message); if (!res.writableEnded) res.write("\n\n(Не удалось получить ответ.)"); }
+  }
+  res.end();
+}
+
 /* ---------------- API ---------------- */
 const LOGIN_RE = /^[a-z0-9._@+-]{3,64}$/;
 async function handleApi(req, res, route) {
   const user = currentUser(req);
   const method = req.method;
 
-  if (route === "config" && method === "GET") return send(res, 200, { tutor: !!anthropic });
+  if (route === "config" && method === "GET") return send(res, 200, { tutor: tutorOn() });
 
   if (route === "register" && method === "POST") {
     if (limited("auth:" + clientIp(req), 20, 600e3)) return send(res, 429, { error: "Слишком много попыток. Подождите 10 минут." });
@@ -201,6 +248,31 @@ async function handleApi(req, res, route) {
     if (!s || typeof s !== "object" || Array.isArray(s) || s.v !== 1) return send(res, 400, { error: "Некорректные данные прогресса." });
     db.progress[user.id] = s; save();
     return send(res, 200, { ok: true });
+  }
+
+  if (route === "profile" && method === "PUT") {
+    const b = await readJson(req, 128 * 1024);
+    const next = {};
+    if (b.name !== undefined) {
+      const name = String(b.name || "").trim().replace(/\s+/g, " ");
+      if (name.length < 1 || name.length > 60) return send(res, 400, { error: "Укажите имя (до 60 символов)." });
+      next.name = name;
+    }
+    if (b.login !== undefined) {
+      const login = String(b.login || "").trim().toLowerCase();
+      if (!LOGIN_RE.test(login)) return send(res, 400, { error: "Логин: от 3 до 64 символов — латинские буквы, цифры и . _ @ + -" });
+      if (login !== user.login && db.logins[login]) return send(res, 409, { error: "Такой логин уже занят." });
+      next.login = login;
+    }
+    if (b.avatar !== undefined) {
+      if (b.avatar === null || b.avatar === "") next.avatar = null;
+      else if (typeof b.avatar === "string" && b.avatar.length <= AVATAR_MAX && AVATAR_RE.test(b.avatar)) next.avatar = b.avatar;
+      else return send(res, 400, { error: "Не удалось сохранить фото: нужен JPEG, PNG или WebP небольшого размера." });
+    }
+    if (next.login && next.login !== user.login) { delete db.logins[user.login]; db.logins[next.login] = user.id; }
+    Object.assign(user, next); if (user.avatar === null) delete user.avatar;
+    save();
+    return send(res, 200, { user: publicUser(user) });
   }
 
   if (route === "password" && method === "POST") {
@@ -272,7 +344,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`Репетитор запущен: http://localhost:${PORT}  (данные: ${DB_FILE}; Алиса: ${anthropic ? "включена, " + MODEL : "выключена"})`);
+  console.log(`Репетитор запущен: http://localhost:${PORT}  (данные: ${DB_FILE}; Алиса: ${tutorLabel()})`);
 });
 const shutdown = async () => { server.close(); await flush(); process.exit(0); };
 process.on("SIGINT", shutdown); process.on("SIGTERM", shutdown);

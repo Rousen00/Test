@@ -117,6 +117,20 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
 .who .meta { display: flex; flex-direction: column; line-height: 1.2; }
 .who .meta small { color: var(--muted); font-size: 11px; }
+.who .me-link { display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 2px 6px 2px 2px; margin: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; border-radius: 999px; }
+.who .me-link:hover { background: var(--soft); }
+.who .me-link[disabled] { cursor: default; background: none; }
+/* профиль */
+.prof { max-width: 640px; margin: 0 auto; display: grid; gap: 16px; }
+.prof form { display: grid; gap: 12px; }
+.prof .field { display: grid; gap: 5px; font-size: 13px; color: var(--muted); }
+.prof .field input { padding: 11px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--sheet); color: var(--ink); font-size: 15px; }
+.prof .err { color: var(--red); font-size: 14px; min-height: 1em; }
+.prof .ok { color: var(--green); font-size: 14px; min-height: 1em; }
+.prof-top { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.prof-top .avatar { width: 96px; height: 96px; font-size: 38px; }
+.prof-top .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.prof h2 { font-family: var(--f-display); font-weight: 500; font-size: 20px; margin: 0 0 4px; }
 .xp { font-family: var(--f-mono); font-size: 12px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px; }
 
 .banner { display: none; background: var(--soft); border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted);
@@ -288,11 +302,14 @@ table.rank tr.me td { background: var(--soft); }
 .burst { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 55; }
 .heat-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 10px; }
 .heat-head a { color: var(--blue); text-decoration: none; }
-.heat-wrap { overflow-x: auto; padding-bottom: 2px; }
-.heat { display: grid; grid-auto-flow: column; grid-auto-columns: 13px; gap: 3px; }
-.hcol { display: grid; grid-template-rows: repeat(7, 13px); gap: 3px; }
-.hmonths { display: grid; grid-auto-flow: column; grid-auto-columns: 16px; font-size: 10.5px; color: var(--muted); height: 16px; white-space: nowrap; }
-.heat i, .heat-legend i { display: block; width: 13px; height: 13px; border-radius: 3px; background: var(--line); }
+/* календарь: строки — недели, столбцы — дни недели */
+.heat { display: grid; grid-template-columns: repeat(7, minmax(0, 34px)); gap: 5px; justify-content: start; }
+.heat .wd { font-size: 10.5px; color: var(--muted); text-align: center; }
+.heat i { display: grid; place-items: center; aspect-ratio: 1; border-radius: 6px; background: var(--line); font-style: normal; font-size: 10.5px; font-family: var(--f-mono); color: var(--muted); }
+.heat i.today { outline: 2px solid var(--accent); outline-offset: 1px; }
+.heat i.future { background: transparent; }
+.heat i.l3, .heat i.l4 { color: #fff; }
+.heat-legend i { display: block; width: 13px; height: 13px; border-radius: 3px; background: var(--line); }
 .l1 { background: color-mix(in srgb, var(--green) 30%, var(--line)) !important; }
 .l2 { background: color-mix(in srgb, var(--green) 55%, var(--line)) !important; }
 .l3 { background: color-mix(in srgb, var(--green) 80%, var(--line)) !important; }
@@ -354,8 +371,7 @@ body.drawer-open { overflow: hidden; }
     <div class="who" id="who">
       <button class="iconbtn" id="themebtn" type="button" aria-label="Тема">◐</button>
       <span class="xp" id="xpchip">0 XP</span>
-      <div class="avatar" id="av">?</div>
-      <div class="meta"><b id="uname">Загрузка…</b><small id="umode">подключаемся</small></div>
+      <button class="me-link" id="melink" type="button" aria-label="Профиль"><span class="avatar" id="av">?</span><span class="meta"><b id="uname">Загрузка…</b><small id="umode">подключаемся</small></span></button>
       <button class="btn ghost" id="authbtn" type="button" hidden>Выйти</button>
     </div>
   </div>
@@ -799,7 +815,9 @@ const sgnTerm = (c, s, first) => {
 const poly = (terms) => { let out = "", first = true; for (const [c, s] of terms) { const t = sgnTerm(c, s, first); if (t) { out += t; first = false; } } return out || "0"; };
 const today = () => new Date().toISOString().slice(0, 10);
 
-function typeset(el) {
+function typeset(el, tries = 0) {
+  // элемент вне страницы MathJax не может измерить: размеры формул выходят NaN и SVG растягивается на всю ширину
+  if (!el.isConnected) { if (tries < 200) setTimeout(() => typeset(el, tries + 1), 25); return; }
   const go = () => { if (window.MathJax && MathJax.typesetPromise) { MathJax.typesetClear && MathJax.typesetClear([el]); return MathJax.typesetPromise([el]).catch(() => {}); } };
   if (window.MathJax && MathJax.typesetPromise) go();
   else { const t = setInterval(() => { if (window.MathJax && MathJax.typesetPromise) { clearInterval(t); go(); } }, 200); setTimeout(() => clearInterval(t), 15000); }
@@ -1567,10 +1585,21 @@ function renderWho() {
   const u = store.user; const name = u ? u.name : store.guest ? "Гость" : "Не выполнен вход";
   $("#uname").textContent = name;
   $("#umode").textContent = u ? (store.offline ? "офлайн · " : "") + "@" + u.login : store.guest ? "прогресс только на этом устройстве" : "";
-  const av = $("#av"); av.textContent = (name[0] || "?").toUpperCase(); av.style.background = u ? colorFor(u.login) : "var(--muted)";
+  fillAvatar($("#av"), name, u && u.avatar, u ? colorFor(u.login) : "var(--muted)");
+  $("#melink").disabled = !store.ready || (!u && !store.guest);
   const btn = $("#authbtn"); btn.hidden = !store.ready || (!u && !store.guest); btn.textContent = u ? "Выйти" : "Войти";
 }
 function colorFor(s) { let x = 0; for (const ch of String(s)) x = (x * 31 + ch.charCodeAt(0)) >>> 0; return `hsl(${x % 360} 55% 42%)`; }
+function fillAvatar(el, name, src, bg) {
+  el.textContent = ""; el.style.background = bg;
+  if (src) el.append(h("img", { src, alt: "" })); else el.textContent = (String(name || "?")[0] || "?").toUpperCase();
+  return el;
+}
+
+$("#melink").addEventListener("click", () => {
+  if (store.user) location.hash = "#profile";
+  else { store.guest = false; setGuest(false); renderWho(); route(); } // гостю — экран входа
+});
 
 $("#authbtn").addEventListener("click", async () => {
   if (store.user) {
@@ -1683,11 +1712,12 @@ function route() {
   if (m && CH[+m[1]]) { CUR.view = "ch"; if (CUR.ch !== +m[1]) { CUR.ch = +m[1]; CUR.tab = CUR.tab || "theory"; } }
   else if (hsh === "exam") CUR.view = "exam";
   else if (hsh === "rating") CUR.view = "rating";
+  else if (hsh === "profile" && store.user) CUR.view = "profile";
   else CUR.view = "home";
   document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("on", a.dataset.v === CUR.view));
   if (CUR.view !== "exam") clearInterval(EX.timer);
   if (CUR.view === "ch" && ST.lastCh !== CUR.ch) { ST.lastCh = CUR.ch; saveLocal(); }
-  ({ home: renderHome, ch: renderChapter, exam: renderExam, rating: renderRating })[CUR.view]();
+  ({ home: renderHome, ch: renderChapter, exam: renderExam, rating: renderRating, profile: renderProfile })[CUR.view]();
   syncAlisa();
   window.scrollTo(0, 0);
 }
@@ -1844,6 +1874,10 @@ function tutorError(e, partial) {
 }
 const chContext = n => `Сейчас студент изучает главу ${n} «${CH[n].title}» (разделы: ${CH[n].secs.join("; ")}).`;
 function mdLite(t) {
+  // \( \) и \[ \] → $ и $$; выносную формулу собираем в одну строку, иначе её разорвёт на абзацы
+  const oneLine = m => m.replace(/\s*\n\s*/g, " ");
+  t = String(t).replace(/\\\[([\s\S]+?)\\\]/g, (_, m) => "\n$$" + oneLine(m) + "$$\n").replace(/\\\(([\s\S]+?)\\\)/g, (_, m) => "$" + m + "$")
+    .replace(/\$\$([\s\S]+?)\$\$/g, (_, m) => "$$" + oneLine(m) + "$$");
   const lines = esc(t).split(/\n/); let out = "", list = null;
   const inline = s => s.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`([^`]+)`/g, "<code>$1</code>");
   for (const ln of lines) {
@@ -1877,7 +1911,7 @@ function screenContext(thread) {
 
 function unavailableCard() {
   return h("div", { class: "card", style: "max-width:640px" }, h("h3", { style: "margin-bottom:8px" }, "Алиса сейчас недоступна"),
-    h("p", { class: "small", style: "margin:0" }, !store.user ? "Репетитор доступен после входа в аккаунт." : store.offline ? "Нет связи с сервером. Теория, графики, задачи и экзамен работают и офлайн." : "Владелец сервера ещё не подключил ИИ: нужен ключ Claude API в файле settings.env (ANTHROPIC_API_KEY). Остальные разделы работают и без репетитора."),
+    h("p", { class: "small", style: "margin:0" }, !store.user ? "Репетитор доступен после входа в аккаунт." : store.offline ? "Нет связи с сервером. Теория, графики, задачи и экзамен работают и офлайн." : "Владелец сервера ещё не подключил ИИ: нужен ключ Claude API (ANTHROPIC_API_KEY) или модель Ollama (OLLAMA_MODEL) в файле settings.env. Остальные разделы работают и без репетитора."),
     !store.user ? h("button", { class: "btn primary", style: "margin-top:12px", onclick: () => { closeDrawer(); store.guest = false; setGuest(false); route(); } }, "Войти или зарегистрироваться") : null);
 }
 
@@ -1908,6 +1942,8 @@ function chatUI(thread, { compact } = {}) {
       if (!ans.content.trim()) ans.content = "Ответ пустой. Попробуй переформулировать вопрос.";
     } catch (e) { ans.content = tutorError(e, ans.content); }
     chatSave();
+    // отложенная отрисовка куска текста иначе затрёт уже набранные формулы
+    cancelAnimationFrame(raf); raf = 0;
     CHAT.busy = false; send.disabled = false; stop.hidden = true; if (list.isConnected) draw();
   }
   send.addEventListener("click", () => { const t = ta.value; ta.value = ""; ask(t); });
@@ -2019,7 +2055,7 @@ async function renderRating() {
     if (!rows.length) return empty("Пока никого. Решите первую задачу — и вы будете на первом месте.");
     body.innerHTML = "";
     rows.forEach((r, i) => {
-      const av = h("div", { class: "avatar", style: `background:${colorFor(r.name)}` }, (r.name[0] || "?").toUpperCase());
+      const av = fillAvatar(h("div", { class: "avatar" }), r.name, r.avatar, colorFor(r.name));
       body.append(h("tr", { class: r.me ? "me" : "" }, h("td", { class: "mono" }, String(i + 1)), h("td", {}, h("div", { class: "person" }, av, h("span", {}, r.name + (r.me ? " (вы)" : "")))),
         h("td", { class: "num" }, String(r.xp)), h("td", { class: "num" }, String(r.solved)), h("td", { class: "num" }, r.tries ? Math.round(100 * r.solved / r.tries) + "%" : "—"), h("td", { class: "num" }, r.best ? r.best + "%" : "—"), h("td", { class: "num" }, String(r.streak))));
     });
@@ -2027,6 +2063,92 @@ async function renderRating() {
     if (e.status === 401) return sessionExpired();
     empty(e.offline ? "Нет связи с сервером — рейтинг появится, когда вернётся интернет." : "Не удалось загрузить рейтинг: " + e.message);
   }
+}
+
+/* ---------- профиль ---------- */
+// фото обрезаем по центру в квадрат 128×128 и сжимаем в JPEG — так оно весит несколько КБ
+function shrinkImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file); const img = new Image();
+    img.onload = () => {
+      const S = 128, side = Math.min(img.naturalWidth, img.naturalHeight);
+      const c = document.createElement("canvas"); c.width = c.height = S;
+      const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, S, S);
+      g.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, S, S);
+      URL.revokeObjectURL(url); resolve(c.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Не удалось открыть картинку. Выберите фото в формате JPEG или PNG.")); };
+    img.src = url;
+  });
+}
+
+function renderProfile() {
+  const v = view(); v.innerHTML = ""; const u = store.user;
+  const msg = (cls) => h("div", { class: cls, role: "status" });
+
+  // фото
+  const big = fillAvatar(h("div", { class: "avatar" }), u.name, u.avatar, colorFor(u.login));
+  const photoMsg = msg("err");
+  const file = h("input", { type: "file", accept: "image/*", hidden: true });
+  const delBtn = h("button", { class: "btn", type: "button", hidden: !u.avatar }, "Удалить фото");
+  const saveProfile = async patch => { const r = await api("profile", { method: "PUT", body: patch }); store.user = r.user; ls.set("hm-user", r.user); renderWho(); return r.user; };
+  const setPhoto = async src => {
+    photoMsg.className = "err"; photoMsg.textContent = "Сохраняем…";
+    try { const nu = await saveProfile({ avatar: src }); fillAvatar(big, nu.name, nu.avatar, colorFor(nu.login)); delBtn.hidden = !nu.avatar; photoMsg.textContent = ""; }
+    catch (e) { if (e.status === 401) return sessionExpired(); photoMsg.textContent = e.message; }
+  };
+  file.addEventListener("change", async () => {
+    const f = file.files[0]; file.value = ""; if (!f) return;
+    try { await setPhoto(await shrinkImage(f)); } catch (e) { photoMsg.textContent = e.message; }
+  });
+  delBtn.addEventListener("click", () => setPhoto(null));
+  const photoCard = h("section", { class: "card" },
+    h("div", { class: "eyebrow" }, "ПРОФИЛЬ"),
+    h("div", { class: "prof-top", style: "margin-top:12px" }, big,
+      h("div", {}, h("h2", {}, u.name), h("div", { class: "small mono" }, "@" + u.login),
+        h("div", { class: "acts", style: "margin-top:10px" }, h("button", { class: "btn primary", type: "button", onclick: () => file.click() }, u.avatar ? "Сменить фото" : "Загрузить фото"), delBtn))),
+    file, photoMsg);
+
+  // имя и логин
+  const fName = h("input", { value: u.name, maxlength: 60, autocomplete: "name", required: true });
+  const fLogin = h("input", { value: u.login, maxlength: 64, autocomplete: "username", autocapitalize: "none", spellcheck: "false", required: true });
+  const infoMsg = msg("err"); const infoBtn = h("button", { class: "btn primary", type: "submit" }, "Сохранить");
+  const infoForm = h("form", { novalidate: true },
+    h("label", { class: "field" }, "Имя и фамилия (видно в рейтинге)", fName),
+    h("label", { class: "field" }, "Логин для входа", fLogin), infoMsg, h("div", {}, infoBtn));
+  infoForm.addEventListener("submit", async e => {
+    e.preventDefault(); infoMsg.className = "err"; infoMsg.textContent = "";
+    const name = fName.value.trim(), login = fLogin.value.trim().toLowerCase();
+    if (!name) return infoMsg.textContent = "Укажите имя.";
+    if (login.length < 3) return infoMsg.textContent = "Логин — не короче 3 символов.";
+    infoBtn.disabled = true;
+    try { await saveProfile({ name, login }); renderProfile(); }
+    catch (ex) { if (ex.status === 401) return sessionExpired(); infoMsg.textContent = ex.message; infoBtn.disabled = false; }
+  });
+
+  // пароль
+  const pOld = h("input", { type: "password", autocomplete: "current-password", maxlength: 200 });
+  const pNew = h("input", { type: "password", autocomplete: "new-password", minlength: 6, maxlength: 200 });
+  const pNew2 = h("input", { type: "password", autocomplete: "new-password", minlength: 6, maxlength: 200 });
+  const pwMsg = msg("err"); const pwBtn = h("button", { class: "btn", type: "submit" }, "Сменить пароль");
+  const pwForm = h("form", { novalidate: true },
+    h("input", { type: "text", name: "username", autocomplete: "username", value: u.login, hidden: true }),
+    h("label", { class: "field" }, "Текущий пароль", pOld),
+    h("label", { class: "field" }, "Новый пароль (не короче 6 символов)", pNew),
+    h("label", { class: "field" }, "Повторите новый пароль", pNew2), pwMsg, h("div", {}, pwBtn));
+  pwForm.addEventListener("submit", async e => {
+    e.preventDefault(); pwMsg.className = "err"; pwMsg.textContent = "";
+    if (pNew.value.length < 6) return pwMsg.textContent = "Новый пароль должен быть не короче 6 символов.";
+    if (pNew.value !== pNew2.value) return pwMsg.textContent = "Пароли не совпадают.";
+    pwBtn.disabled = true;
+    try { await api("password", { method: "POST", body: { old: pOld.value, password: pNew.value } }); pOld.value = pNew.value = pNew2.value = ""; pwMsg.className = "ok"; pwMsg.textContent = "Пароль изменён."; }
+    catch (ex) { pwMsg.textContent = ex.message; }
+    pwBtn.disabled = false;
+  });
+
+  v.append(h("div", { class: "prof" }, photoCard,
+    h("section", { class: "card" }, h("h2", {}, "Имя и логин"), infoForm),
+    h("section", { class: "card" }, h("h2", {}, "Пароль"), pwForm)));
 }
 
 /* ============================================================
@@ -2104,28 +2226,24 @@ function burst() {
   })(t0);
 }
 
-/* карта активности: 18 недель */
+/* карта активности: последние 5 недель, неделя — строка, с понедельника */
 function heatmap() {
   const daily = Object.assign({}, ST.daily || {}); for (const d of ST.days) if (!daily[d]) daily[d] = 1;
-  const weeks = 18; const end = new Date(); const start = new Date(end); start.setDate(end.getDate() - (weeks * 7 - 1));
-  // начинаем с понедельника
-  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
-  const grid = h("div", { class: "heat", role: "img", "aria-label": "Активность по дням" });
-  let total = 0, active = 0; const months = [];
-  for (let w = 0; ; w++) {
-    const col = h("div", { class: "hcol" }); let any = false;
-    for (let d = 0; d < 7; d++) {
-      const day = new Date(start); day.setDate(start.getDate() + w * 7 + d); if (day > end) break; any = true;
-      const key = day.toISOString().slice(0, 10); const n = daily[key] || 0; total += n; if (n) active++;
-      const lvl = n === 0 ? 0 : n < 3 ? 1 : n < 6 ? 2 : n < 11 ? 3 : 4;
-      col.append(h("i", { class: "l" + lvl, title: `${day.toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}: ${n ? n + " задач" : "нет занятий"}` }));
-      if (d === 0 && day.getDate() <= 7) months.push([w, day.toLocaleDateString("ru-RU", { month: "short" }).replace(".", "")]);
-    }
-    if (!any) break; grid.append(col);
+  const weeks = 5; const end = new Date(); const start = new Date(end);
+  start.setDate(end.getDate() - ((end.getDay() + 6) % 7) - (weeks - 1) * 7);
+  const grid = h("div", { class: "heat", role: "img", "aria-label": "Активность по дням за последние 5 недель" });
+  for (const wd of ["пн", "вт", "ср", "чт", "пт", "сб", "вс"]) grid.append(h("span", { class: "wd" }, wd));
+  let total = 0, active = 0;
+  for (let i = 0; i < weeks * 7; i++) {
+    const day = new Date(start); day.setDate(start.getDate() + i);
+    if (day > end) { grid.append(h("i", { class: "future" })); continue; }
+    const key = day.toISOString().slice(0, 10); const n = daily[key] || 0; total += n; if (n) active++;
+    const lvl = n === 0 ? 0 : n < 3 ? 1 : n < 6 ? 2 : n < 11 ? 3 : 4;
+    const isToday = day.toDateString() === end.toDateString();
+    grid.append(h("i", { class: "l" + lvl + (isToday ? " today" : ""), title: `${day.toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}: ${n ? n + " задач" : "нет занятий"}` }, String(day.getDate())));
   }
-  const mrow = h("div", { class: "hmonths" }); for (const [w, m] of months) { const s = h("span", {}, m); s.style.gridColumnStart = w + 1; mrow.append(s); }
-  return h("div", { class: "card" }, h("div", { class: "heat-head" }, h("div", { class: "small" }, "Активность"), h("div", { class: "small mono" }, `${active} дн. · ${total} задач`)),
-    h("div", { class: "heat-wrap" }, mrow, grid),
+  return h("div", { class: "card" }, h("div", { class: "heat-head" }, h("div", { class: "small" }, "Активность за месяц"), h("div", { class: "small mono" }, `${active} дн. · ${total} задач`)),
+    grid,
     h("div", { class: "heat-legend small" }, "меньше", ...[0, 1, 2, 3, 4].map(l => h("i", { class: "l" + l })), "больше"));
 }
 
