@@ -278,7 +278,7 @@ table.rank tr.me td { background: var(--soft); }
 .bcell .bd { font-size: 11.5px; color: var(--muted); line-height: 1.25; }
 .badge { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-family: var(--f-read); font-weight: 700; font-size: 17px; color: var(--muted); border: 2px dashed var(--line); background: var(--soft); }
 .badge.on { color: var(--accent-ink); background: var(--accent); border: 2px solid color-mix(in srgb, var(--accent) 60%, var(--ink)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
-.toasts { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 10px; z-index: 50; }
+.toasts { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(84px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 10px; z-index: 50; }
 .toast { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; background: var(--sheet); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px 12px 12px; box-shadow: 0 10px 30px rgba(0,0,0,.18); min-width: 240px; max-width: min(340px, calc(100vw - 32px)); animation: tin .35s cubic-bezier(.2,.9,.3,1.3); transition: opacity .4s, transform .4s; }
 .toast.out { opacity: 0; transform: translateY(10px); }
 @keyframes tin { from { opacity: 0; transform: translateY(20px) scale(.96); } }
@@ -313,6 +313,26 @@ table.rank tr.me td { background: var(--soft); }
 .typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite; }
 .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
 @keyframes blink { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+.fab { position: fixed; z-index: 40; right: max(18px, calc(env(safe-area-inset-right, 0px) + 12px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 10px; padding: 8px 18px 8px 8px; border-radius: 999px; border: 0; cursor: pointer; background: var(--ink); color: var(--sheet); font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.22); transition: transform .15s; }
+.fab:hover { transform: translateY(-2px); }
+.fab .fab-ico { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); font-family: var(--f-display); font-size: 15px; position: relative; }
+.fab .fab-ico::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--accent); opacity: 0; animation: ping 2.8s ease-out 1s 2; }
+@keyframes ping { 0% { opacity: .8; transform: scale(.9); } 100% { opacity: 0; transform: scale(1.5); } }
+.fab.on { background: var(--accent); color: var(--accent-ink); }
+@media (max-width: 600px) { .fab { padding: 8px; } .fab .fab-t { display: none; } .fab .fab-ico { width: 42px; height: 42px; font-size: 17px; } }
+.scrim { position: fixed; inset: 0; background: rgba(10, 15, 18, .28); z-index: 44; }
+.drawer { position: fixed; z-index: 45; top: 0; right: 0; bottom: 0; width: min(440px, 100vw); background: var(--sheet); border-left: 1px solid var(--line); box-shadow: -12px 0 40px rgba(0,0,0,.18); display: flex; flex-direction: column; transform: translateX(105%); transition: transform .28s cubic-bezier(.2,.8,.2,1); visibility: hidden; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); padding-right: env(safe-area-inset-right, 0px); }
+.drawer.open { transform: none; visibility: visible; }
+.drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.drawer-head b { display: block; font-size: 15px; margin-top: 2px; }
+.drawer-body { flex: 1; min-height: 0; padding: 14px 16px; display: flex; }
+.chat.compact { grid-template-rows: minmax(0, 1fr) auto; width: 100%; max-width: none; height: 100%; }
+.chat.compact .msgs { max-height: none; height: 100%; overflow: auto; }
+.chat.compact .msg { max-width: 100%; font-size: 14.5px; }
+.chat.compact .msg.ai { font-size: 15px; }
+.chat.compact .compose textarea { min-height: 54px; }
+body.drawer-open { overflow: hidden; }
+@media (min-width: 1100px) { body.drawer-open .scrim { background: transparent; } }
 .combo { color: var(--accent); font-family: var(--f-mono); font-weight: 600; }
 .tile { position: relative; }
 .tile.done::after { content: "✓"; position: absolute; top: 12px; right: 14px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--green); color: var(--sheet); font-size: 12px; font-weight: 700; }
@@ -1657,7 +1677,7 @@ const view = () => $("#view");
 
 function route() {
   if (!store.ready) return;
-  if (!store.user && !store.guest) { document.querySelectorAll("#nav a").forEach(a => a.classList.remove("on")); renderAuth(); window.scrollTo(0, 0); return; }
+  if (!store.user && !store.guest) { document.querySelectorAll("#nav a").forEach(a => a.classList.remove("on")); renderAuth(); syncAlisa(); window.scrollTo(0, 0); return; }
   const hsh = (location.hash || "#home").slice(1);
   const m = hsh.match(/^ch-(\d+)$/);
   if (m && CH[+m[1]]) { CUR.view = "ch"; if (CUR.ch !== +m[1]) { CUR.ch = +m[1]; CUR.tab = CUR.tab || "theory"; } }
@@ -1668,6 +1688,7 @@ function route() {
   if (CUR.view !== "exam") clearInterval(EX.timer);
   if (CUR.view === "ch" && ST.lastCh !== CUR.ch) { ST.lastCh = CUR.ch; saveLocal(); }
   ({ home: renderHome, ch: renderChapter, exam: renderExam, rating: renderRating })[CUR.view]();
+  syncAlisa();
   window.scrollTo(0, 0);
 }
 window.addEventListener("hashchange", route);
@@ -1724,7 +1745,7 @@ function renderChapter() {
 }
 
 function renderPane() {
-  const pane = $("#pane"); if (!pane) return; pane.innerHTML = ""; const c = CH[CUR.ch];
+  const pane = $("#pane"); if (!pane) return; pane.innerHTML = ""; const c = CH[CUR.ch]; syncAlisa();
   if (CUR.tab === "theory") {
     pane.append(h("div", { class: "secs" }, c.secs.map((s, i) => h("span", {}, `${c.n}.${i + 1}. ${s}`))));
     pane.append(h("div", { class: "theory", html: c.theory }));
@@ -1782,7 +1803,7 @@ function problemCard(p, { onResult, onNext, ch, examMode }) {
     } catch (e) { txt = tutorError(e, txt); }
     body.innerHTML = mdLite(txt || "Подсказка не получилась. Попробуйте ещё раз."); typeset(body);
     hintBtn.textContent = "Подсказка получена"; } }, "Подсказка");
-  const explainAndGo = (ok) => { CUR.tab = "ai"; CHAT.pending = ok
+  const explainAndGo = (ok) => { closeDrawer(); CUR.tab = "ai"; CHAT.pending = ok
     ? `Объясни подробно, почему решение такое. Задача: ${stripTags(p.q)}\nОтвет: ${fmt(p.a, 4)}\nКраткое решение: ${stripTags(p.sol)}`
     : `Разбери, пожалуйста, мою ошибку. Задача: ${stripTags(p.q)}\nМой ответ: ${inp.value}\nПравильный ответ: ${fmt(p.a, 4)}\nКраткое решение: ${stripTags(p.sol)}`; renderChapter(); };
   const submit = () => {
@@ -1835,22 +1856,44 @@ function mdLite(t) {
   if (list) out += `</${list}>`;
   return out;
 }
-function renderChat(pane, n) {
-  chatLoad(); const c = CH[n]; const msgs = CHAT.byCh[n] || (CHAT.byCh[n] = []);
-  if (!store.tutor || !store.user) {
-    pane.append(h("div", { class: "card", style: "max-width:640px" }, h("h3", { style: "margin-bottom:8px" }, "Алиса сейчас недоступна"),
-      h("p", { class: "small", style: "margin:0" }, !store.user ? "Репетитор доступен после входа в аккаунт." : store.offline ? "Нет связи с сервером. Теория, графики, задачи и экзамен работают и офлайн." : "Владелец сервера ещё не подключил ИИ: нужен ключ Claude API в файле settings.env (ANTHROPIC_API_KEY). Остальные разделы работают и без репетитора."),
-      !store.user ? h("button", { class: "btn primary", style: "margin-top:12px", onclick: () => { store.guest = false; setGuest(false); route(); } }, "Войти или зарегистрироваться") : null));
-    return;
+const CHAT_SUGG = { 1: ["Как быстро считать определитель 3×3?", "Почему AB ≠ BA? Приведи пример"], 2: ["Когда система не имеет решений?", "Покажи метод Гаусса на примере 3×3"], 3: ["Чем векторное произведение отличается от скалярного?", "Как найти объём тетраэдра по вершинам?"], 4: ["Как отличить эллипс от гиперболы по уравнению?", "Как привести x²+4y²−6x+8y=3 к каноническому виду?"], 5: ["Объясни определение предела на пальцах", "Почему (1+1/n)ⁿ → e?"], 6: ["Когда можно заменять на эквивалентные?", "Разбери lim (1+3/x)^x"], 7: ["Как определить тип разрыва?", "Пример функции, непрерывной, но не дифференцируемой"], 8: ["Как брать производную сложной функции?", "Когда нельзя применять Лопиталя?"], 9: ["Как выбрать u и dv при интегрировании по частям?", "Разложи (x+1)/(x²−x) на простейшие"], 10: ["В чём смысл теоремы о среднем?", "Почему Φ′(x) = f(x)?"], 11: ["Как найти площадь в полярных координатах?", "Выведи формулу объёма тела вращения"], 12: ["Что показывает градиент?", "Найди экстремум f = x²+xy+y²−3x"], 13: ["Как понять, что уравнение однородное?", "Реши y″−5y′+6y=0"], 14: ["Какой признак сходимости выбрать?", "Разложи ln(1+x) в ряд Маклорена"], 15: ["Почему ∫dx/x расходится, а ∫dx/x² — нет?", "Что такое абсолютная сходимость интеграла?"], 16: ["Как расставить пределы в двойном интеграле?", "Зачем нужен якобиан?"], 17: ["Чем отличаются интегралы 1-го и 2-го рода?", "Объясни формулу Грина"], 18: ["Что такое поток векторного поля?", "Почему лист Мёбиуса односторонний?"] };
+CHAT_SUGG.general = ["С какой главы начать подготовку?", "Составь план повторения на неделю", "Объясни, что такое предел, простыми словами"];
+
+/* что видит студент сейчас — чтобы Алиса отвечала по делу */
+function screenContext(thread) {
+  if (thread === "general") {
+    const where = { home: "на главной странице курса", rating: "в рейтинге", exam: "на странице экзамена" }[CUR.view] || "в приложении";
+    const weak = Object.keys(CH).filter(n => (ST.stats[n] || {}).tries && mastery(n) < .5).slice(0, 5).map(n => `${n}. ${CH[n].title}`);
+    return `Студент сейчас ${where}. Курс: ${Object.values(CH).map(c => c.n + ". " + c.title).join("; ")}.` + (weak.length ? ` Слабые главы студента: ${weak.join("; ")}.` : "");
   }
+  let ctx = chContext(thread);
+  if (CUR.view === "ch" && CUR.ch === +thread) {
+    const tabName = { theory: "читает теорию", viz: "смотрит интерактивный график", practice: "решает задачи", ai: "в чате" }[CUR.tab];
+    if (tabName) ctx += ` Студент ${tabName}.`;
+    if (CUR.tab === "practice" && PR.cur && PR.ch === CUR.ch) ctx += ` Текущая задача: ${stripTags(PR.cur.q)} Если студент ещё не ответил на неё, не называй ответ — помогай наводящими вопросами.`;
+  }
+  return ctx.slice(0, 800);
+}
+
+function unavailableCard() {
+  return h("div", { class: "card", style: "max-width:640px" }, h("h3", { style: "margin-bottom:8px" }, "Алиса сейчас недоступна"),
+    h("p", { class: "small", style: "margin:0" }, !store.user ? "Репетитор доступен после входа в аккаунт." : store.offline ? "Нет связи с сервером. Теория, графики, задачи и экзамен работают и офлайн." : "Владелец сервера ещё не подключил ИИ: нужен ключ Claude API в файле settings.env (ANTHROPIC_API_KEY). Остальные разделы работают и без репетитора."),
+    !store.user ? h("button", { class: "btn primary", style: "margin-top:12px", onclick: () => { closeDrawer(); store.guest = false; setGuest(false); route(); } }, "Войти или зарегистрироваться") : null);
+}
+
+/* чат: thread — номер главы или "general" */
+function chatUI(thread, { compact } = {}) {
+  chatLoad();
+  if (!store.tutor || !store.user) return unavailableCard();
+  const msgs = CHAT.byCh[thread] || (CHAT.byCh[thread] = []);
+  const title = thread === "general" ? "по всему курсу" : `по главе «${CH[thread].title}»`;
   const list = h("div", { class: "msgs", "aria-live": "polite" });
-  const draw = () => { list.innerHTML = ""; if (!msgs.length) list.append(h("div", { class: "msg ai" }, h("span", { class: "who-ai" }, "АЛИСА"), h("p", {}, `Привет! Я Алиса, помогу разобраться с главой «${c.title}». Спроси про определение, попроси пример, разбор задачи или проверку решения.`)));
+  const draw = () => { list.innerHTML = ""; if (!msgs.length) list.append(h("div", { class: "msg ai" }, h("span", { class: "who-ai" }, "АЛИСА"), h("p", {}, `Привет! Я Алиса, отвечу на вопросы ${title}. Спроси про определение, попроси пример, подсказку к задаче или проверку решения.`)));
     for (const m of msgs) { const el = h("div", { class: "msg " + (m.role === "user" ? "me" : "ai") }); if (m.role !== "user") el.append(h("span", { class: "who-ai" }, "АЛИСА")); const body = h("div", { html: m.role === "user" || m.content ? mdLite(m.content) : '<span class="typing" aria-label="Алиса печатает"><i></i><i></i><i></i></span>' }); el.append(body); list.append(el); }
     typeset(list); list.scrollTop = list.scrollHeight; };
-  const ta = h("textarea", { id: "chat-in", placeholder: "Например: почему у вырожденной матрицы нет обратной?", rows: 2 });
-  const send = h("button", { class: "btn primary" }, "Спросить");
-  const stop = h("button", { class: "btn", hidden: true, onclick: () => CHAT.ctrl && CHAT.ctrl.abort() }, "Стоп");
-  const context = chContext(n);
+  const ta = h("textarea", { id: "chat-in-" + thread + (compact ? "-d" : ""), placeholder: thread === "general" ? "Например: как готовиться к экзамену?" : "Например: почему у вырожденной матрицы нет обратной?", rows: 2, "aria-label": "Вопрос Алисе" });
+  const send = h("button", { class: "btn primary", type: "button" }, "Спросить");
+  const stop = h("button", { class: "btn", type: "button", hidden: true, onclick: () => CHAT.ctrl && CHAT.ctrl.abort() }, "Стоп");
   const clear = h("button", { class: "btn ghost", type: "button", onclick: () => { if (CHAT.busy) return; msgs.length = 0; chatSave(); draw(); } }, "Очистить");
   async function ask(text) {
     if (CHAT.busy || !text.trim()) return; CHAT.busy = true; send.disabled = true; stop.hidden = false;
@@ -1861,25 +1904,62 @@ function renderChat(pane, n) {
     let raf = 0;
     const paint = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; const b = lastBody(); if (b && ans.content) { b.innerHTML = mdLite(ans.content); list.scrollTop = list.scrollHeight; } }); };
     try {
-      await streamTutor({ context, messages: history, signal: CHAT.ctrl.signal, onText: t => { ans.content = t; paint(); } });
+      await streamTutor({ context: screenContext(thread), messages: history, signal: CHAT.ctrl.signal, onText: t => { ans.content = t; paint(); } });
       if (!ans.content.trim()) ans.content = "Ответ пустой. Попробуй переформулировать вопрос.";
     } catch (e) { ans.content = tutorError(e, ans.content); }
     chatSave();
-    CHAT.busy = false; send.disabled = false; stop.hidden = true; draw();
+    CHAT.busy = false; send.disabled = false; stop.hidden = true; if (list.isConnected) draw();
   }
   send.addEventListener("click", () => { const t = ta.value; ta.value = ""; ask(t); });
   ta.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send.click(); } });
-  const sugg = { 1: ["Как быстро считать определитель 3×3?", "Почему AB ≠ BA? Приведи пример"], 2: ["Когда система не имеет решений?", "Покажи метод Гаусса на примере 3×3"], 3: ["Чем векторное произведение отличается от скалярного?", "Как найти объём тетраэдра по вершинам?"], 4: ["Как отличить эллипс от гиперболы по уравнению?", "Как привести x²+4y²−6x+8y=3 к каноническому виду?"], 5: ["Объясни определение предела на пальцах", "Почему (1+1/n)ⁿ → e?"], 6: ["Когда можно заменять на эквивалентные?", "Разбери lim (1+3/x)^x"], 7: ["Как определить тип разрыва?", "Пример функции, непрерывной, но не дифференцируемой"], 8: ["Как брать производную сложной функции?", "Когда нельзя применять Лопиталя?"], 9: ["Как выбрать u и dv при интегрировании по частям?", "Разложи (x+1)/(x²−x) на простейшие"], 10: ["В чём смысл теоремы о среднем?", "Почему Φ′(x) = f(x)?"], 11: ["Как найти площадь в полярных координатах?", "Выведи формулу объёма тела вращения"], 12: ["Что показывает градиент?", "Найди экстремум f = x²+xy+y²−3x"], 13: ["Как понять, что уравнение однородное?", "Реши y″−5y′+6y=0"], 14: ["Какой признак сходимости выбрать?", "Разложи ln(1+x) в ряд Маклорена"], 15: ["Почему ∫dx/x расходится, а ∫dx/x² — нет?", "Что такое абсолютная сходимость интеграла?"], 16: ["Как расставить пределы в двойном интеграле?", "Зачем нужен якобиан?"], 17: ["Чем отличаются интегралы 1-го и 2-го рода?", "Объясни формулу Грина"], 18: ["Что такое поток векторного поля?", "Почему лист Мёбиуса односторонний?"] }[n] || [];
-  pane.append(h("div", { class: "chat" }, list, h("div", { style: "display:grid;gap:8px" }, h("div", { class: "suggest" }, sugg.map(q => h("button", { class: "chip", onclick: () => ask(q) }, q))), h("div", { class: "compose" }, ta, h("div", { style: "display:grid;gap:6px" }, send, stop, clear)))));
+  const sugg = CHAT_SUGG[thread] || [];
+  const root = h("div", { class: "chat" + (compact ? " compact" : "") }, list, h("div", { style: "display:grid;gap:8px" }, h("div", { class: "suggest" }, sugg.map(q => h("button", { class: "chip", type: "button", onclick: () => ask(q) }, q))), h("div", { class: "compose" }, ta, h("div", { style: "display:grid;gap:6px;align-content:start" }, send, stop, clear))));
   draw();
-  if (CHAT.pending) { const t = CHAT.pending; CHAT.pending = null; ask(t); }
+  root._ask = ask; root._focus = () => ta.focus({ preventScroll: true });
+  if (CHAT.pending) { const t = CHAT.pending; CHAT.pending = null; setTimeout(() => ask(t), 0); }
+  return root;
+}
+function renderChat(pane, n) { pane.append(chatUI(n)); }
+
+/* ---------- Алиса в любом окне: плавающая кнопка и боковая панель ---------- */
+const DR = { open: false, thread: null };
+const fab = h("button", { class: "fab", id: "alisa-fab", type: "button", hidden: true, "aria-label": "Спросить Алису (Alt+A)", title: "Спросить Алису (Alt+A)" },
+  h("span", { class: "fab-ico", "aria-hidden": "true" }, "А"), h("span", { class: "fab-t" }, "Спросить Алису"));
+const drawer = h("aside", { class: "drawer", id: "alisa-drawer", "aria-hidden": "true", "aria-label": "Чат с Алисой" });
+const scrim = h("div", { class: "scrim", hidden: true });
+document.body.append(scrim, drawer, fab);
+fab.addEventListener("click", () => DR.open ? closeDrawer() : openDrawer());
+scrim.addEventListener("click", closeDrawer);
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && DR.open) closeDrawer();
+  if (e.altKey && (e.code === "KeyA") && !fab.hidden) { e.preventDefault(); DR.open ? closeDrawer() : openDrawer(); }
+});
+function drawerThread() { return CUR.view === "ch" ? CUR.ch : "general"; }
+function renderDrawer() {
+  DR.thread = drawerThread(); drawer.innerHTML = "";
+  const head = h("div", { class: "drawer-head" },
+    h("div", {}, h("div", { class: "eyebrow" }, "АЛИСА · ИИ-РЕПЕТИТОР"), h("b", {}, DR.thread === "general" ? "Вопросы по всему курсу" : `Глава ${DR.thread}. ${CH[DR.thread].title}`)),
+    h("button", { class: "iconbtn", type: "button", "aria-label": "Закрыть", onclick: closeDrawer }, "✕"));
+  const body = h("div", { class: "drawer-body" }); const chat = chatUI(DR.thread, { compact: true }); body.append(chat);
+  drawer.append(head, body);
+  if (chat._focus && matchMedia("(min-width: 700px)").matches) setTimeout(chat._focus, 60);
+}
+function openDrawer() { DR.open = true; renderDrawer(); drawer.classList.add("open"); drawer.setAttribute("aria-hidden", "false"); scrim.hidden = false; fab.classList.add("on"); document.body.classList.add("drawer-open"); }
+function closeDrawer() { if (!DR.open) return; DR.open = false; drawer.classList.remove("open"); drawer.setAttribute("aria-hidden", "true"); scrim.hidden = true; fab.classList.remove("on"); document.body.classList.remove("drawer-open"); }
+/* вызывается при каждой смене экрана */
+function syncAlisa() {
+  const examRunning = CUR.view === "exam" && EX.on;
+  const show = store.ready && (store.user || store.guest) && !examRunning && !(CUR.view === "ch" && CUR.tab === "ai");
+  fab.hidden = !show;
+  if (!show) closeDrawer();
+  else if (DR.open && DR.thread !== drawerThread()) renderDrawer();
 }
 
 /* ---------- Экзамен ---------- */
 const EX = { on: false, list: [], i: 0, res: [], t0: 0, timer: null, chapters: null };
 function fmtTime(s) { s = Math.round(s || 0); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
 function renderExam() {
-  const v = view(); v.innerHTML = ""; clearInterval(EX.timer);
+  const v = view(); v.innerHTML = ""; clearInterval(EX.timer); syncAlisa();
   if (!EX.on) {
     const chosen = EX.chapters || new Set(Object.keys(CH).map(Number));
     const box = h("div", { class: "kinds" }, Object.values(CH).map(c => h("button", { class: "chip" + (chosen.has(c.n) ? " on" : ""), onclick: e => { chosen.has(c.n) ? chosen.delete(c.n) : chosen.add(c.n); e.currentTarget.classList.toggle("on"); } }, `${c.n}. ${c.title}`)));
@@ -1912,7 +1992,7 @@ function startExam(chs) {
 function finishExam() {
   clearInterval(EX.timer); const score = EX.res.filter(Boolean).length, total = EX.list.length, secs = (Date.now() - EX.t0) / 1000;
   ST.exams.push({ date: today(), score, total, secs: Math.round(secs) }); if (ST.exams.length > 50) ST.exams = ST.exams.slice(-50); touch(); EX.on = false;
-  if (score === total) burst(); setTimeout(() => checkBadges(), 400);
+  if (score === total) burst(); setTimeout(() => checkBadges(), 400); syncAlisa();
   const byCh = {}; EX.list.forEach((p, i) => { (byCh[p.ch] = byCh[p.ch] || [0, 0]); byCh[p.ch][1]++; if (EX.res[i]) byCh[p.ch][0]++; });
   const weak = Object.entries(byCh).filter(([, [a, b]]) => a < b).map(([n]) => +n);
   const v = view(); v.innerHTML = "";
