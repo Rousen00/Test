@@ -29,9 +29,12 @@ def fetch(url):
 
 def check(url):
     res = {}
-    r, err = fetch(url)
-    if r is None and url.startswith("https://"):
-        r, err = fetch("http://" + url[len("https://"):])
+    bare = re.sub(r"^https?://(www\.)?", "", url)
+    r = err = None
+    for cand in (url, "https://" + bare, "http://" + bare):
+        r, err = fetch(cand)
+        if r is not None:
+            break
     if r is None:
         return {"Доступен": "Нет", "Код": err, "Вердикт": "Сайт не открывается — уточнить, жива ли компания"}
     html = r.text
@@ -39,11 +42,16 @@ def check(url):
     res["Доступен"] = "Да" if r.status_code < 400 else "Нет"
     res["Код"] = r.status_code
     res["Итоговый адрес"] = r.url
-    https_ok, _ = fetch("https://" + re.sub(r"^https?://", "", url))
+    https_ok, _ = fetch("https://" + bare)
     res["HTTPS"] = "Да" if https_ok is not None and https_ok.status_code < 400 else "Нет"
     res["Мобильная версия (viewport)"] = "Да" if 'name="viewport"' in low or "name=viewport" in low else "Нет"
     years = [int(y) for y in re.findall(r"(?:©|&copy;|copyright)[^<]{0,40}?((?:19|20)\d{2})", low)]
     res["Год в копирайте"] = max(years) if years else ""
+    if res["Год в копирайте"] == CURRENT_YEAR and "ucoz" in low:
+        res["Год в копирайте"] = f"{CURRENT_YEAR} (ставит uCoz автоматически)"
+    dates = [int(y) for y in re.findall(r"\b\d{1,2}[./]\d{1,2}[./]((?:19|20)\d{2})\b", html)]
+    dates = [y for y in dates if y <= CURRENT_YEAR]
+    res["Самая свежая дата в тексте"] = max(dates) if dates else ""
     m = re.search(r"<title[^>]*>(.*?)</title>", html, re.S | re.I)
     res["Title"] = (m.group(1).strip() if m else "")[:120]
     res["Конструктор"] = "uCoz" if "ucoz" in low else ""
@@ -56,15 +64,17 @@ def check(url):
     problems = []
     if res["HTTPS"] == "Нет": problems.append("нет HTTPS")
     if res["Мобильная версия (viewport)"] == "Нет": problems.append("нет мобильной версии")
-    if res["Год в копирайте"] and res["Год в копирайте"] < CURRENT_YEAR - 3:
+    if isinstance(res["Год в копирайте"], int) and res["Год в копирайте"] < CURRENT_YEAR - 3:
         problems.append(f"копирайт {res['Год в копирайте']}")
+    if res["Самая свежая дата в тексте"] and res["Самая свежая дата в тексте"] < CURRENT_YEAR - 3:
+        problems.append(f"свежайшая дата в тексте {res['Самая свежая дата в тексте']}")
     if res["Конструктор"]: problems.append("uCoz/бесплатный поддомен")
     if res["Flash"]: problems.append("Flash")
     if res["Онлайн-запись/форма"] == "Нет": problems.append("нет формы заявки")
     if res["Переезд на новый домен"]:
         res["Вердикт"] = "Проверить: возможно, уже есть новый сайт. " + ", ".join(problems)
     elif res["Доступен"] == "Нет":
-        res["Вердикт"] = f"Ошибка {r.status_code} — уточнить, жива ли компания"
+        res["Вердикт"] = f"Ошибка {r.status_code}: сайт удалён или не работает — уточнить, жива ли компания"
     else:
         res["Вердикт"] = ("Нужен новый сайт: " if len(problems) >= 2 else "Мелкие проблемы: ") + ", ".join(problems)
     return res
@@ -76,7 +86,7 @@ def main():
     headers = [c.value for c in ws[1]]
     url_col = headers.index("Сайт") + 1
     new_cols = ["Доступен", "Код", "Итоговый адрес", "HTTPS", "Мобильная версия (viewport)",
-                "Год в копирайте", "Title", "Конструктор", "Flash", "Таблицы для вёрстки",
+                "Год в копирайте", "Самая свежая дата в тексте", "Title", "Конструктор", "Flash", "Таблицы для вёрстки",
                 "Переезд на новый домен", "Онлайн-запись/форма", "Вердикт"]
     start = ws.max_column + 1
     for i, h in enumerate(new_cols):
