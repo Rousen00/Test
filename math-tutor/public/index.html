@@ -1,5 +1,19 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>В гостях у высшей математики</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Репетитор по высшей математике: теория, интерактивные графики, задачи с автопроверкой, пробный экзамен.">
+<meta name="theme-color" content="#fbfcfa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141c20" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ВысшМат">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Unbounded:wght@500;700&display=swap">
 <script>
@@ -46,6 +60,25 @@ window.MathJax = {
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0; }
+:root { padding-bottom: env(safe-area-inset-bottom, 0px); }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+@media (max-width: 600px) { .top { position: static; } input, select, textarea { font-size: 16px !important; } .brand span { display: none; } .who .meta small { display: none; } }
+.authwrap { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 420px); gap: 24px; align-items: start; max-width: 1040px; margin: 0 auto; }
+@media (max-width: 860px) { .authwrap { grid-template-columns: minmax(0, 1fr); } .authwrap .pitch { order: 2; } }
+.authwrap form { display: grid; gap: 12px; }
+.authwrap .field { display: grid; gap: 5px; font-size: 13px; color: var(--muted); }
+.authwrap .field input { padding: 11px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--sheet); color: var(--ink); font-size: 15px; }
+.authwrap .err { color: var(--red); font-size: 14px; min-height: 1em; }
+.feat { display: grid; gap: 10px; margin: 18px 0 0; padding: 0; list-style: none; }
+.feat li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; font-size: 14.5px; }
+.feat li b { font-family: var(--f-mono); color: var(--accent); }
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+.seg button { border: 0; background: var(--sheet); padding: 10px; cursor: pointer; font-weight: 600; color: var(--muted); }
+.seg button.on { background: var(--ink); color: var(--sheet); }
+.linkbtn { background: none; border: 0; color: var(--blue); cursor: pointer; padding: 4px 0; text-decoration: underline; font-size: 14px; }
 html, body { min-height: 100%; }
 body {
   background: var(--bg);
@@ -138,7 +171,8 @@ mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width:
 /* viz */
 .viz { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 18px; align-items: start; }
 @media (max-width: 1000px) { .viz { grid-template-columns: minmax(0, 1fr); } }
-.canvas-box { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--sheet); position: relative; touch-action: none; }
+.canvas-box { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--sheet); position: relative; touch-action: pan-y; }
+.canvas-box.grab { touch-action: none; }
 .canvas-box canvas { display: block; width: 100%; }
 .hint { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
 .ctl { display: grid; gap: 12px; align-content: start; }
@@ -236,6 +270,8 @@ table.rank tr.me td { background: var(--soft); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 
+</head>
+<body>
 <header class="top">
   <div class="top-in">
     <a class="brand" href="#home"><b>ВЫСШ·МАТ</b><span>репетитор по методичке НГТУ</span></a>
@@ -249,6 +285,7 @@ table.rank tr.me td { background: var(--soft); }
       <span class="xp" id="xpchip">0 XP</span>
       <div class="avatar" id="av">?</div>
       <div class="meta"><b id="uname">Загрузка…</b><small id="umode">подключаемся</small></div>
+      <button class="btn ghost" id="authbtn" type="button" hidden>Выйти</button>
     </div>
   </div>
 </header>
@@ -984,7 +1021,7 @@ function Plot(box, opt) {
   P.X = x => (x - P.xr[0]) / (P.xr[1] - P.xr[0]) * P.W;
   P.Y = y => P.H - (y - P.yr[0]) / (P.yr[1] - P.yr[0]) * P.H;
   P.inv = (px, py) => [P.xr[0] + px / P.W * (P.xr[1] - P.xr[0]), P.yr[0] + (P.H - py) / P.H * (P.yr[1] - P.yr[0])];
-  P.redraw = () => { P.C = themeCols(); ctx.clearRect(0, 0, P.W, P.H); ctx.fillStyle = P.C.sheet; ctx.fillRect(0, 0, P.W, P.H); P.draw(P); };
+  P.redraw = () => { box.classList.toggle("grab", P.handles.length > 0); P.C = themeCols(); ctx.clearRect(0, 0, P.W, P.H); ctx.fillStyle = P.C.sheet; ctx.fillRect(0, 0, P.W, P.H); P.draw(P); };
   P.step = () => { const span = P.xr[1] - P.xr[0]; const raw = span / 10; const p = 10 ** Math.floor(Math.log10(raw)); const m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
   P.grid = () => {
     const st = P.step(); ctx.lineWidth = 1; ctx.strokeStyle = alpha(P.C.line, .9);
@@ -1369,7 +1406,7 @@ const VIZ = {
         const r = f(u, v), ru = f(u + e, v).map((x, k) => (x - r[k]) / e), rv = f(u, v + e).map((x, k) => (x - r[k]) / e); const n = [ru[1] * rv[2] - ru[2] * rv[1], ru[2] * rv[0] - ru[0] * rv[2], ru[0] * rv[1] - ru[1] * rv[0]]; const L = Math.hypot(...n); if (L < 1e-9) continue;
         const tip = r.map((x, k) => x + n[k] / L * .3); const p = proj(r), q = proj(tip); ctx.strokeStyle = C.c3; ctx.fillStyle = C.c3; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke(); ctx.beginPath(); ctx.arc(q[0], q[1], 2.5, 0, 7); ctx.fill(); } }
       ro.set([["Поверхность", name], ["Нормаль", "n = r′ᵤ × r′ᵥ"], ["Сторона", s.k === "mob" ? "<b>односторонняя</b>: обойдя лист, нормаль приходит в противоположном направлении" : "двусторонняя: нормаль задаёт ориентацию"]]); }
-    let dr = null; cv.style.cursor = "grab";
+    let dr = null; cv.style.cursor = "grab"; box.classList.add("grab");
     cv.addEventListener("pointerdown", e => { dr = [e.clientX, e.clientY, s.rx, s.rz]; cv.setPointerCapture(e.pointerId); });
     cv.addEventListener("pointermove", e => { if (!dr) return; s.rz = dr[3] + (e.clientX - dr[0]) * .01; s.rx = dr[2] + (e.clientY - dr[1]) * .01; draw(); });
     cv.addEventListener("pointerup", () => dr = null);
@@ -1378,77 +1415,170 @@ const VIZ = {
 };
 
 /* ============================================================
-   Состояние пользователя и хранилище
+   Аккаунт, сохранение прогресса, офлайн
    ============================================================ */
-const store = { db: null, user: null, uid: null, me: null, mode: "local", canWrite: true, sample: null };
-const blankState = () => ({ v: 1, stats: {}, read: {}, exams: [], xp: 0, days: [], last: null });
+const store = { user: null, guest: false, ready: false, tutor: false, offline: false, dirty: false };
+const blankState = () => ({ v: 1, stats: {}, read: {}, exams: [], xp: 0, days: [], last: null, updated: 0 });
 let ST = blankState();
 
 function chStat(n) { return ST.stats[n] || (ST.stats[n] = { ok: 0, tries: 0 }); }
 function mastery(n) { const s = ST.stats[n]; const r = ST.read[n] ? .2 : 0; return Math.min(1, r + (s ? Math.min(s.ok, 8) / 10 : 0)); }
 function totals() { let ok = 0, tries = 0; for (const s of Object.values(ST.stats)) { ok += s.ok; tries += s.tries; } return { ok, tries }; }
-function streak() { const d = new Set(ST.days); let n = 0; const t = new Date(); for (;;) { const k = t.toISOString().slice(0, 10); if (d.has(k)) { n++; t.setDate(t.getDate() - 1); } else break; } return n; }
+function streak() { const d = new Set(ST.days); let n = 0; const t = new Date(); if (!d.has(t.toISOString().slice(0, 10))) t.setDate(t.getDate() - 1); for (;;) { const k = t.toISOString().slice(0, 10); if (d.has(k)) { n++; t.setDate(t.getDate() - 1); } else break; } return n; }
 
-const LKEY = "hm-tutor-state-v1";
-function loadLocal() { try { const s = JSON.parse(localStorage.getItem(LKEY) || "null"); if (s && s.v) return s; } catch (e) {} return null; }
-function saveLocal() { try { localStorage.setItem(LKEY, JSON.stringify(ST)); } catch (e) {} }
+const ls = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+const stateKey = uid => "hm-state-" + (uid || "guest");
+const validState = s => s && typeof s === "object" && s.v === 1;
+const isEmptyState = s => !validState(s) || (!s.xp && !Object.keys(s.stats || {}).length && !(s.exams || []).length && !Object.keys(s.read || {}).length);
+function saveLocal() { ls.set(stateKey(store.user && store.user.id), ST); if (store.user) ls.set("hm-dirty-" + store.user.id, store.dirty); }
+function setGuest(on) { if (on) ls.set("hm-guest", 1); else ls.del("hm-guest"); }
 
-let saveTimer = null, saving = Promise.resolve();
+async function api(path, opts = {}) {
+  let r;
+  try {
+    r = await fetch("api/" + path, { method: opts.method || "GET", credentials: "same-origin", headers: opts.body ? { "Content-Type": "application/json" } : {}, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  } catch (e) { throw Object.assign(new Error("Нет связи с сервером. Проверьте интернет."), { offline: true }); }
+  let data = null; try { data = await r.json(); } catch (e) {}
+  if (!r.ok) throw Object.assign(new Error((data && data.error) || "Ошибка сервера (" + r.status + ")"), { status: r.status });
+  return data;
+}
+
+let saveTimer = null, saving = false;
 function touch() {
   const d = today(); if (!ST.days.includes(d)) { ST.days.push(d); if (ST.days.length > 400) ST.days = ST.days.slice(-400); }
-  ST.last = location.hash || "#home"; renderWho(); saveLocal();
+  ST.last = location.hash || "#home"; ST.updated = Date.now();
+  store.dirty = !!store.user; saveLocal(); renderWho();
   clearTimeout(saveTimer); saveTimer = setTimeout(pushRemote, 1200);
 }
-function pushRemote() {
-  if (!store.db || !store.uid || !store.canWrite) return;
-  const snapshot = JSON.parse(JSON.stringify(ST));
-  saving = saving.then(async () => {
-    try {
-      await store.db.doc("data/users/" + store.uid + "/progress").set(snapshot);
-      const t = totals(); const best = snapshot.exams.reduce((m, e) => Math.max(m, Math.round(100 * e.score / e.total)), 0);
-      const mastered = Object.keys(CH).filter(n => mastery(n) >= .99).length;
-      await store.db.doc("board/" + store.uid).set({ xp: snapshot.xp, solved: t.ok, tries: t.tries, best, mastered, streak: streak(), updated: Date.now() });
-    } catch (e) {
-      if (e && (e.code === "invalid_argument" || e.code === "not_granted" || e.code === "revoked")) { store.canWrite = false; showBanner("Прогресс сохраняется только в этом браузере: у вашего доступа нет права записи. Попросите владельца выдать доступ «Участник» (Contributor)."); }
-    }
-  });
+async function pushRemote() {
+  if (!store.user || !store.dirty) return;
+  if (saving) { clearTimeout(saveTimer); saveTimer = setTimeout(pushRemote, 800); return; }
+  saving = true; const snapshot = JSON.parse(JSON.stringify(ST));
+  try {
+    await api("progress", { method: "PUT", body: { state: snapshot } });
+    if (ST.updated === snapshot.updated) store.dirty = false;
+    saveLocal(); if (store.offline) { store.offline = false; hideBanner(); }
+  } catch (e) {
+    if (e.status === 401) sessionExpired();
+    else if (e.offline) { store.offline = true; showBanner("Нет связи с сервером. Прогресс сохранён на этом устройстве и отправится, когда появится интернет."); }
+    else showBanner("Не удалось сохранить прогресс: " + e.message);
+  } finally { saving = false; }
 }
+window.addEventListener("online", () => { pushRemote(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && store.dirty) { clearTimeout(saveTimer); pushRemote(); } });
+
 function showBanner(t) { const b = $("#banner"); b.textContent = t; b.classList.add("show"); }
+function hideBanner() { $("#banner").classList.remove("show"); }
 
 function renderWho() {
   $("#xpchip").textContent = ST.xp + " XP";
-  const me = store.me; const name = (me && me.name) || (store.uid ? "Студент" : "Гость");
+  const u = store.user; const name = u ? u.name : store.guest ? "Гость" : "Не выполнен вход";
   $("#uname").textContent = name;
-  $("#umode").textContent = store.mode === "cloud" ? (store.canWrite ? "прогресс в аккаунте" : "только чтение") : "локальный режим";
-  const av = $("#av"); av.innerHTML = "";
-  if (me && me.avatarUrl) av.append(h("img", { src: me.avatarUrl, alt: "" })); else av.textContent = (name[0] || "?").toUpperCase();
-  if (me && me.color) av.style.background = me.color;
+  $("#umode").textContent = u ? (store.offline ? "офлайн · " : "") + "@" + u.login : store.guest ? "прогресс только на этом устройстве" : "";
+  const av = $("#av"); av.textContent = (name[0] || "?").toUpperCase(); av.style.background = u ? colorFor(u.login) : "var(--muted)";
+  const btn = $("#authbtn"); btn.hidden = !store.ready || (!u && !store.guest); btn.textContent = u ? "Выйти" : "Войти";
+}
+function colorFor(s) { let x = 0; for (const ch of String(s)) x = (x * 31 + ch.charCodeAt(0)) >>> 0; return `hsl(${x % 360} 55% 42%)`; }
+
+$("#authbtn").addEventListener("click", async () => {
+  if (store.user) {
+    if (store.dirty) { clearTimeout(saveTimer); await pushRemote(); }
+    try { await api("logout", { method: "POST", body: {} }); } catch (e) {}
+    ls.del("hm-user"); store.user = null; store.dirty = false; ST = blankState();
+  } else { store.guest = false; setGuest(false); }
+  hideBanner(); renderWho(); location.hash = "#home"; route();
+});
+
+function sessionExpired() {
+  ls.del("hm-user"); store.user = null; store.guest = false;
+  showBanner("Сессия истекла. Войдите снова — прогресс с этого устройства сохранится."); renderWho(); route();
+}
+
+/* выбрать самый свежий прогресс из сервера и устройства */
+function signedIn(res) {
+  const u = res.user; store.user = u; store.guest = false; setGuest(false); ls.set("hm-user", u);
+  const server = validState(res.progress) ? res.progress : null;
+  const local = ls.get(stateKey(u.id)); const guest = ls.get(stateKey(null));
+  const localDirty = !!ls.get("hm-dirty-" + u.id);
+  let pick = server || blankState(), push = false;
+  if (validState(local) && localDirty && (local.updated || 0) > ((server && server.updated) || 0)) { pick = local; push = true; }
+  else if (isEmptyState(server) && !isEmptyState(guest)) { pick = guest; push = true; ls.del(stateKey(null)); }
+  ST = Object.assign(blankState(), JSON.parse(JSON.stringify(pick)));
+  store.dirty = push; saveLocal(); renderWho();
+  if (push) pushRemote();
 }
 
 async function initStore() {
-  const local = loadLocal(); if (local) ST = Object.assign(blankState(), local);
-  renderWho();
-  if (!window.claude || !window.claude.use) { route(); return; }
+  if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});
+  api("config").then(c => { store.tutor = !!(c && c.tutor); if (CUR.tab === "ai" && CUR.view === "ch") renderPane(); }).catch(() => {});
   try {
-    const [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
-    store.user = user; store.db = db;
-    if (user) { store.me = await user.me(); store.uid = await user.id(); try { const cw = await user.can("data.write"); if (cw === false) store.canWrite = false; } catch (e) {} }
-    if (db && store.uid) {
-      store.mode = "cloud";
-      const timer = setTimeout(() => {}, 10000);
-      try {
-        const snap = await db.doc("data/users/" + store.uid + "/progress").get();
-        clearTimeout(timer);
-        if (snap.exists) { const remote = snap.data(); ST = Object.assign(blankState(), JSON.parse(JSON.stringify(remote))); }
-        else if (local && store.canWrite) { pushRemote(); }
-      } catch (e) { clearTimeout(timer); }
-      if (!store.canWrite) showBanner("У вас доступ только для просмотра — прогресс сохраняется в этом браузере. Для личного аккаунта с синхронизацией попросите владельца выдать доступ «Участник» (Contributor).");
-    } else if (!store.uid) {
-      showBanner("Вы не вошли в аккаунт Claude — прогресс сохраняется только в этом браузере.");
+    signedIn(await api("me"));
+  } catch (e) {
+    const cached = ls.get("hm-user");
+    if (e.offline && cached) {
+      store.user = cached; store.offline = true; ST = Object.assign(blankState(), ls.get(stateKey(cached.id)) || {}); store.dirty = !!ls.get("hm-dirty-" + cached.id);
+      showBanner("Нет связи с сервером. Можно заниматься — прогресс отправится, когда появится интернет.");
+    } else {
+      if (e.status === 401) ls.del("hm-user");
+      if (e.offline) showBanner("Нет связи с сервером. Можно заниматься в гостевом режиме.");
+      store.guest = !!ls.get("hm-guest") || (e.offline && !cached);
+      if (store.guest) ST = Object.assign(blankState(), ls.get(stateKey(null)) || {});
     }
-  } catch (e) {}
-  renderWho(); route();
-  claude.use("sample").then(s => { store.sample = s; if (CUR.tab === "ai") renderPane(); });
+  }
+  store.ready = true; renderWho(); route();
+}
+
+/* ---------- экран входа и регистрации ---------- */
+function renderAuth() {
+  const v = view(); v.innerHTML = ""; let mode = "login";
+  const err = h("div", { class: "err", role: "alert" });
+  const f = {
+    login: h("input", { id: "f-login", name: "username", autocomplete: "username", autocapitalize: "none", spellcheck: "false", required: true, maxlength: 64 }),
+    name: h("input", { id: "f-name", name: "name", autocomplete: "name", maxlength: 60 }),
+    pw: h("input", { id: "f-pw", name: "password", type: "password", autocomplete: "current-password", required: true, minlength: 6, maxlength: 200 }),
+    pw2: h("input", { id: "f-pw2", name: "password2", type: "password", autocomplete: "new-password", minlength: 6, maxlength: 200 })
+  };
+  const nameRow = h("label", { class: "field" }, "Имя и фамилия (видно в рейтинге)", f.name);
+  const pw2Row = h("label", { class: "field" }, "Повторите пароль", f.pw2);
+  const submit = h("button", { class: "btn primary", type: "submit" }, "Войти");
+  const segL = h("button", { type: "button", class: "on" }, "Вход"), segR = h("button", { type: "button" }, "Регистрация");
+  const setMode = m => { mode = m; segL.classList.toggle("on", m === "login"); segR.classList.toggle("on", m === "register"); nameRow.hidden = pw2Row.hidden = m === "login"; f.name.required = f.pw2.required = m === "register";
+    f.pw.autocomplete = m === "login" ? "current-password" : "new-password"; submit.textContent = m === "login" ? "Войти" : "Создать аккаунт"; err.textContent = ""; };
+  segL.addEventListener("click", () => setMode("login")); segR.addEventListener("click", () => setMode("register"));
+  const form = h("form", { novalidate: true },
+    h("label", { class: "field" }, "Логин или e-mail", f.login), nameRow, h("label", { class: "field" }, "Пароль (не короче 6 символов)", f.pw), pw2Row, err, submit);
+  form.addEventListener("submit", async e => {
+    e.preventDefault(); err.textContent = "";
+    const login = f.login.value.trim(), pw = f.pw.value;
+    if (login.length < 3) return err.textContent = "Введите логин (не короче 3 символов).";
+    if (pw.length < 6) return err.textContent = "Пароль должен быть не короче 6 символов.";
+    if (mode === "register") { if (!f.name.value.trim()) return err.textContent = "Укажите имя."; if (pw !== f.pw2.value) return err.textContent = "Пароли не совпадают."; }
+    submit.disabled = true; submit.textContent = mode === "login" ? "Входим…" : "Создаём…";
+    try {
+      const res = await api(mode, { method: "POST", body: { login, password: pw, name: f.name.value.trim() } });
+      hideBanner(); signedIn(res); location.hash = location.hash && location.hash !== "#" ? location.hash : "#home"; route();
+    } catch (ex) { err.textContent = ex.message; submit.disabled = false; setMode(mode); err.textContent = ex.message; }
+  });
+  const guestBtn = h("button", { class: "linkbtn", type: "button", onclick: () => { store.guest = true; setGuest(true); ST = Object.assign(blankState(), ls.get(stateKey(null)) || {}); renderWho(); route(); } }, "Попробовать без регистрации");
+  setMode("login");
+  v.append(h("div", { class: "authwrap" },
+    h("section", { class: "card pitch" },
+      h("div", { class: "eyebrow" }, "ВЫСШАЯ МАТЕМАТИКА · НГТУ"),
+      h("h1", { style: "font-family:var(--f-display);font-weight:500;font-size:clamp(24px,4vw,34px);line-height:1.15;margin:8px 0 12px", html: "Готовимся к <span style=\"color:var(--accent)\">экзамену</span> вместе" }),
+      h("p", { class: "quote" }, "«Пока машина прогревалась, Саливан решил потренироваться… Алиса вывела текст: Матрицы. Определители. Системы линейных уравнений»"),
+      h("ul", { class: "feat" },
+        h("li", {}, h("b", {}, "18"), h("span", {}, "глав по методичке А. А. Нуятова: от матриц до поверхностных интегралов")),
+        h("li", {}, h("b", {}, "∿"), h("span", {}, "интерактивный график к каждой главе — тяните точки, двигайте ползунки")),
+        h("li", {}, h("b", {}, "54"), h("span", {}, "типа задач со случайными числами и автопроверкой, решение — сразу")),
+        h("li", {}, h("b", {}, "10"), h("span", {}, "задач на время в пробном экзамене, рейтинг группы")),
+        h("li", {}, h("b", {}, "А"), h("span", {}, "Алиса — ИИ-репетитор, объясняет и разбирает ошибки")))),
+    h("section", { class: "card" }, h("div", { class: "seg" }, segL, segR), form,
+      h("div", { style: "margin-top:14px;display:grid;gap:4px" }, guestBtn, h("span", { class: "small" }, "В гостевом режиме прогресс хранится только на этом устройстве, рейтинга и Алисы нет.")))));
+  setTimeout(() => f.login.focus({ preventScroll: true }), 50);
 }
 
 /* ============================================================
@@ -1458,6 +1588,8 @@ const CUR = { view: "home", ch: 1, tab: "theory" };
 const view = () => $("#view");
 
 function route() {
+  if (!store.ready) return;
+  if (!store.user && !store.guest) { document.querySelectorAll("#nav a").forEach(a => a.classList.remove("on")); renderAuth(); window.scrollTo(0, 0); return; }
   const hsh = (location.hash || "#home").slice(1);
   const m = hsh.match(/^ch-(\d+)$/);
   if (m && CH[+m[1]]) { CUR.view = "ch"; if (CUR.ch !== +m[1]) { CUR.ch = +m[1]; CUR.tab = CUR.tab || "theory"; } }
@@ -1465,7 +1597,6 @@ function route() {
   else if (hsh === "rating") CUR.view = "rating";
   else CUR.view = "home";
   document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("on", a.dataset.v === CUR.view));
-  if (CUR.view !== "rating" && boardUnsub) { boardUnsub(); boardUnsub = null; }
   ({ home: renderHome, ch: renderChapter, exam: renderExam, rating: renderRating })[CUR.view]();
   window.scrollTo(0, 0);
 }
@@ -1478,13 +1609,13 @@ function ringSVG(p) {
 function renderHome() {
   const t = totals(); const all = Object.keys(CH).map(n => mastery(n)); const avg = all.reduce((a, b) => a + b, 0) / all.length;
   const next = Object.keys(CH).map(Number).find(n => mastery(n) < .99) || 1;
-  const name = (store.me && store.me.name) ? store.me.name.split(" ")[0] : "";
+  const name = store.user ? store.user.name.split(" ")[0] : "";
   const v = view(); v.innerHTML = "";
   const hero = h("div", { class: "hero" },
     h("div", { class: "card" },
       h("p", { class: "quote" }, "«…он приложил большой палец к датчику отпечатка и попросил голосового помощника вывести на лобовое стекло свои мысли. Алиса вывела текст: Матрицы. Определители. Системы линейных уравнений»"),
       h("h1", { html: `${name ? esc(name) + ", " : ""}готовимся к <em>высшей математике</em>` }),
-      h("p", { class: "small", style: "max-width:60ch;margin:0 0 16px" }, "18 глав по методичке А. А. Нуятова (НГТУ им. Р. Е. Алексеева): теория с ключевыми «Важно», интерактивные графики, задачи с автопроверкой, пробный экзамен и репетитор Алиса, который отвечает на вопросы по каждой главе."),
+      h("p", { class: "small", style: "max-width:60ch;margin:0 0 16px" }, "18 глав по методичке А. А. Нуятова (НГТУ им. Р. Е. Алексеева): теория с ключевыми «Важно», интерактивные графики, задачи с автопроверкой, пробный экзамен и репетитор Алиса. Работает в браузере на компьютере и телефоне, можно установить как приложение."),
       h("div", { style: "display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px" },
         h("a", { class: "btn primary", href: "#ch-" + next, style: "text-decoration:none" }, `Продолжить: глава ${next}`),
         h("a", { class: "btn", href: "#exam", style: "text-decoration:none" }, "Пробный экзамен")),
@@ -1568,7 +1699,7 @@ function problemCard(p, { onResult, onNext, ch, examMode }) {
     done = true; const ok = close(u, p.a, p.tol); check.disabled = true; inp.disabled = true; next.hidden = false;
     verdict.className = "verdict " + (ok ? "ok" : "bad");
     verdict.innerHTML = `<div><b>${ok ? "Верно!" : "Неверно."}</b> Правильный ответ: <span class="mono">${fmt(p.a, 4)}</span></div><div class="sol">${p.sol}</div>`;
-    if (!ok && !examMode && store.sample) verdict.append(h("div", {}, h("button", { class: "btn", onclick: () => { CUR.tab = "ai"; CHAT.pending = `Разбери, пожалуйста, мою ошибку. Задача: ${stripTags(p.q)}\nМой ответ: ${inp.value}\nПравильный ответ: ${fmt(p.a, 4)}\nКраткое решение: ${stripTags(p.sol)}`; renderChapter(); } }, "Спросить Алису, где ошибка")));
+    if (!ok && !examMode && store.tutor) verdict.append(h("div", {}, h("button", { class: "btn", onclick: () => { CUR.tab = "ai"; CHAT.pending = `Разбери, пожалуйста, мою ошибку. Задача: ${stripTags(p.q)}\nМой ответ: ${inp.value}\nПравильный ответ: ${fmt(p.a, 4)}\nКраткое решение: ${stripTags(p.sol)}`; renderChapter(); } }, "Спросить Алису, где ошибка")));
     typeset(verdict); onResult(ok, u); next.focus();
   };
   check.addEventListener("click", submit); inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); done ? next.click() : submit(); } });
@@ -1595,9 +1726,10 @@ function mdLite(t) {
 }
 function renderChat(pane, n) {
   const c = CH[n]; const msgs = CHAT.byCh[n] || (CHAT.byCh[n] = []);
-  if (!store.sample) {
+  if (!store.tutor || !store.user) {
     pane.append(h("div", { class: "card", style: "max-width:640px" }, h("h3", { style: "margin-bottom:8px" }, "Алиса сейчас недоступна"),
-      h("p", { class: "small", style: "margin:0" }, "Репетитор работает, когда страница открыта на claude.ai и вы разрешили ей обращаться к Claude. Остальные разделы — теория, графики, задачи и экзамен — работают и без него.")));
+      h("p", { class: "small", style: "margin:0" }, !store.user ? "Репетитор доступен после входа в аккаунт." : store.offline ? "Нет связи с сервером. Теория, графики, задачи и экзамен работают и офлайн." : "На сервере не настроен доступ к Claude API (переменная ANTHROPIC_API_KEY). Остальные разделы работают и без репетитора."),
+      !store.user ? h("button", { class: "btn primary", style: "margin-top:12px", onclick: () => { store.guest = false; setGuest(false); route(); } }, "Войти или зарегистрироваться") : null));
     return;
   }
   const list = h("div", { class: "msgs", "aria-live": "polite" });
@@ -1607,23 +1739,26 @@ function renderChat(pane, n) {
   const ta = h("textarea", { id: "chat-in", placeholder: "Например: почему у вырожденной матрицы нет обратной?", rows: 2 });
   const send = h("button", { class: "btn primary" }, "Спросить");
   const stop = h("button", { class: "btn", hidden: true, onclick: () => CHAT.ctrl && CHAT.ctrl.abort() }, "Стоп");
-  const sys = `Ты — Алиса, дружелюбный репетитор по высшей математике для студентов технического вуза. Ты опираешься на методичку А. А. Нуятова «В гостях у высшей математики» (НГТУ им. Р. Е. Алексеева, 2025). Сейчас студент изучает главу ${n} «${c.title}» (разделы: ${c.secs.join("; ")}).
-Правила: отвечай по-русски, коротко и по шагам; формулы пиши в LaTeX внутри $...$ (строчные) или $$...$$ (выносные); используй обозначения из российской традиции (tg, ctg, arctg, пр). Если студент просит решить задачу, сначала дай наводящую подсказку и спроси, хочет ли он полное решение. Если находишь ошибку в рассуждениях — укажи место ошибки. Не выдумывай номера страниц и теорем методички.`;
+  const context = `Сейчас студент изучает главу ${n} «${c.title}» (разделы: ${c.secs.join("; ")}).`;
   async function ask(text) {
     if (CHAT.busy || !text.trim()) return; CHAT.busy = true; send.disabled = true; stop.hidden = false;
     msgs.push({ role: "user", content: text.trim() }); const ans = { role: "assistant", content: "" }; msgs.push(ans); draw();
     const history = msgs.slice(0, -1).slice(-12).map(m => ({ role: m.role, content: m.content }));
-    history[0] = { role: history[0].role, content: (history[0].role === "user" ? sys + "\n\nВопрос студента:\n" : "") + history[0].content };
-    if (history[0].role !== "user") history.unshift({ role: "user", content: sys });
     CHAT.ctrl = new AbortController();
     const lastBody = () => list.lastElementChild && list.lastElementChild.querySelector("div");
     let raf = 0;
+    const paint = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; const b = lastBody(); if (b) { b.innerHTML = mdLite(ans.content); list.scrollTop = list.scrollHeight; } }); };
     try {
-      const r = await store.sample(history, { signal: CHAT.ctrl.signal, cache: false, modelTier: "default",
-        onText: u => { ans.content = u.text; if (!raf) raf = requestAnimationFrame(() => { raf = 0; const b = lastBody(); if (b) { b.innerHTML = mdLite(ans.content); list.scrollTop = list.scrollHeight; } }); } });
-      ans.content = r.text || ans.content;
+      const r = await fetch("api/tutor", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ context, messages: history }), signal: CHAT.ctrl.signal });
+      if (!r.ok) { let d = null; try { d = await r.json(); } catch (e) {} throw Object.assign(new Error((d && d.error) || "Ошибка " + r.status), { status: r.status }); }
+      const reader = r.body.getReader(); const dec = new TextDecoder();
+      for (;;) { const { done, value } = await reader.read(); if (done) break; ans.content += dec.decode(value, { stream: true }); paint(); }
+      ans.content += dec.decode();
+      if (!ans.content.trim()) ans.content = "Ответ пустой. Попробуй переформулировать вопрос.";
     } catch (e) {
-      const code = e && e.code; ans.content = (e && e.text) ? e.text + "\n\n(ответ прерван)" : code === "not_granted" ? "Без разрешения я не могу отвечать. Разрешить доступ можно в меню страницы «Разрешения»." : code === "rate_limited" ? "Слишком много вопросов подряд — подожди минутку и спроси снова." : (code === "aborted" || (e && e.name === "AbortError")) ? (ans.content || "") + "\n\n(остановлено)" : "Не удалось получить ответ. Попробуй ещё раз чуть позже.";
+      if (e && e.name === "AbortError") ans.content = (ans.content || "") + "\n\n(остановлено)";
+      else if (e && e.status === 401) { ans.content = "Сессия истекла — войдите снова."; sessionExpired(); }
+      else ans.content = (ans.content ? ans.content + "\n\n" : "") + ((e && e.status) ? e.message : "Нет связи с сервером. Проверь интернет и попробуй ещё раз.");
     }
     CHAT.busy = false; send.disabled = false; stop.hidden = true; draw();
   }
@@ -1682,33 +1817,34 @@ function finishExam() {
 }
 
 /* ---------- Рейтинг ---------- */
-let boardUnsub = null;
-function renderRating() {
+async function renderRating() {
   const v = view(); v.innerHTML = "";
   const body = h("tbody"); const wrap = h("div", { class: "card", style: "max-width:960px" },
-    h("div", { class: "eyebrow" }, "РЕЙТИНГ ГРУППЫ"), h("h1", { style: "font-family:var(--f-display);font-weight:500;font-size:26px;margin:6px 0 6px" }, "Кто как готовится"),
-    h("p", { class: "small", style: "margin:0 0 14px" }, "Каждый, кто открывает эту страницу под своим аккаунтом, попадает в таблицу после первой решённой задачи."),
+    h("div", { class: "eyebrow" }, "РЕЙТИНГ"), h("h1", { style: "font-family:var(--f-display);font-weight:500;font-size:26px;margin:6px 0 6px" }, "Кто как готовится"),
+    h("p", { class: "small", style: "margin:0 0 14px" }, "В таблицу попадают все зарегистрированные студенты после первой решённой задачи."),
     h("div", { class: "tbl" }, h("table", { class: "rank" }, h("thead", {}, h("tr", {}, h("th", {}, "#"), h("th", {}, "Студент"), h("th", { style: "text-align:right" }, "XP"), h("th", { style: "text-align:right" }, "Решено"), h("th", { style: "text-align:right" }, "Точность"), h("th", { style: "text-align:right" }, "Лучший экзамен"), h("th", { style: "text-align:right" }, "Серия"))), body)));
   v.append(wrap);
-  const empty = msg => { body.innerHTML = ""; body.append(h("tr", {}, h("td", { colspan: 7, class: "small", style: "padding:18px 8px" }, msg))); };
-  if (!store.db) { empty("Рейтинг доступен, когда страница открыта на claude.ai под вашим аккаунтом. В локальном режиме ваш результат: " + ST.xp + " XP."); return; }
+  const empty = (msg, btn) => { body.innerHTML = ""; body.append(h("tr", {}, h("td", { colspan: 7, class: "small", style: "padding:18px 8px" }, msg, btn ? h("div", { style: "margin-top:10px" }, btn) : null))); };
+  if (!store.user) { empty("Рейтинг доступен после входа. Сейчас у вас " + ST.xp + " XP на этом устройстве — при регистрации они перенесутся в аккаунт.", h("button", { class: "btn primary", onclick: () => { store.guest = false; setGuest(false); route(); } }, "Войти или зарегистрироваться")); return; }
   empty("Загружаем рейтинг…");
-  const to = setTimeout(() => empty("Рейтинг пока не отвечает. Обновите страницу чуть позже."), 10000);
-  if (boardUnsub) boardUnsub();
-  boardUnsub = store.db.collection("board").orderBy("xp", "desc").limit(100).onSnapshot(async snap => {
-    clearTimeout(to);
-    if (snap.empty) { empty("Пока никого. Решите первую задачу — и вы будете на первом месте."); return; }
-    const ids = snap.docs.map(d => d.id); let profs = {};
-    try { profs = store.user ? await store.user.profiles(ids) : {}; } catch (e) {}
+  if (store.dirty) await pushRemote();
+  try {
+    const { rows } = await api("leaderboard");
+    if (!rows.length) return empty("Пока никого. Решите первую задачу — и вы будете на первом месте.");
     body.innerHTML = "";
-    snap.docs.forEach((d, i) => { const r = d.data() || {}; const p = profs[d.id] || {}; const name = p.name || (d.id === store.uid ? (store.me && store.me.name) || "Вы" : "Студент");
-      const av = h("div", { class: "avatar", style: p.color ? `background:${p.color}` : "" }); if (p.avatarUrl) av.append(h("img", { src: p.avatarUrl, alt: "" })); else av.textContent = (name[0] || "?").toUpperCase();
-      body.append(h("tr", { class: d.id === store.uid ? "me" : "" }, h("td", { class: "mono" }, String(i + 1)), h("td", {}, h("div", { class: "person" }, av, h("span", {}, name + (d.id === store.uid ? " (вы)" : "")))),
-        h("td", { class: "num" }, String(r.xp || 0)), h("td", { class: "num" }, String(r.solved || 0)), h("td", { class: "num" }, r.tries ? Math.round(100 * r.solved / r.tries) + "%" : "—"), h("td", { class: "num" }, r.best ? r.best + "%" : "—"), h("td", { class: "num" }, String(r.streak || 0)))); });
-  }, () => { clearTimeout(to); empty("Не удалось загрузить рейтинг."); });
+    rows.forEach((r, i) => {
+      const av = h("div", { class: "avatar", style: `background:${colorFor(r.name)}` }, (r.name[0] || "?").toUpperCase());
+      body.append(h("tr", { class: r.me ? "me" : "" }, h("td", { class: "mono" }, String(i + 1)), h("td", {}, h("div", { class: "person" }, av, h("span", {}, r.name + (r.me ? " (вы)" : "")))),
+        h("td", { class: "num" }, String(r.xp)), h("td", { class: "num" }, String(r.solved)), h("td", { class: "num" }, r.tries ? Math.round(100 * r.solved / r.tries) + "%" : "—"), h("td", { class: "num" }, r.best ? r.best + "%" : "—"), h("td", { class: "num" }, String(r.streak))));
+    });
+  } catch (e) {
+    if (e.status === 401) return sessionExpired();
+    empty(e.offline ? "Нет связи с сервером — рейтинг появится, когда вернётся интернет." : "Не удалось загрузить рейтинг: " + e.message);
+  }
 }
 
 /* ---------- старт ---------- */
-route();
 initStore();
 </script>
+</body>
+</html>
