@@ -1,2 +1,5 @@
 node_modules/
 data/
+bin/
+settings.env
+public-url.txt
