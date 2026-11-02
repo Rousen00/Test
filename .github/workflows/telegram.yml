@@ -1,0 +1,20 @@
+name: Telegram message
+
+on:
+  workflow_dispatch:
+    inputs:
+      text:
+        description: "Message text"
+        default: "привет"
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Send message to "7 негритят"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_TEXT: ${{ inputs.text }}
+        run: python3 telegram/send_message.py
