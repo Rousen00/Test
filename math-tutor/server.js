@@ -52,6 +52,7 @@ setInterval(() => {
 const scrypt = (pw, salt) => new Promise((res, rej) => crypto.scrypt(pw, salt, 64, { N: 16384, r: 8, p: 1 }, (e, k) => e ? rej(e) : res(k)));
 async function hashPassword(pw) { const salt = crypto.randomBytes(16); const key = await scrypt(pw, salt); return { salt: salt.toString("base64"), hash: key.toString("base64") }; }
 async function checkPassword(pw, user) { const key = await scrypt(pw, Buffer.from(user.salt, "base64")); const ref = Buffer.from(user.hash, "base64"); return key.length === ref.length && crypto.timingSafeEqual(key, ref); }
+const DUMMY_USER = { salt: crypto.randomBytes(16).toString("base64"), hash: crypto.randomBytes(64).toString("base64") };
 const sha = s => crypto.createHash("sha256").update(s).digest("hex");
 
 function parseCookies(req) {
@@ -179,7 +180,9 @@ async function handleApi(req, res, route) {
     const b = await readJson(req, 8 * 1024);
     const login = String(b.login || "").trim().toLowerCase(), pw = String(b.password || "");
     const u = db.users[db.logins[login]];
-    if (!u || !(await checkPassword(pw, u))) return send(res, 401, { error: "Неверный логин или пароль." });
+    // для несуществующего логина тоже считаем хеш, чтобы по времени ответа нельзя было узнать, есть ли такой пользователь
+    const ok = await checkPassword(pw, u || DUMMY_USER);
+    if (!u || !ok) return send(res, 401, { error: "Неверный логин или пароль." });
     setSession(req, res, u.id);
     return send(res, 200, { user: publicUser(u), progress: db.progress[u.id] || null });
   }

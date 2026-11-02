@@ -1,5 +1,5 @@
 // Офлайн-кэш: оболочка приложения и библиотеки с CDN. API никогда не кэшируется.
-const VERSION = "hm-v1";
+const VERSION = "hm-v2";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
 const CDN = ["cdn.jsdelivr.net", "fonts.googleapis.com", "fonts.gstatic.com"];
 

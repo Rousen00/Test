@@ -267,6 +267,49 @@ table.rank tr.me td { background: var(--soft); }
 .timer { font-family: var(--f-mono); font-size: 18px; margin-left: auto; }
 .big { font-family: var(--f-display); font-size: 48px; font-weight: 700; color: var(--accent); line-height: 1; }
 
+/* награды, активность, анимации */
+.iconbtn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--sheet); color: var(--ink); cursor: pointer; font-size: 16px; display: grid; place-items: center; padding: 0; }
+.iconbtn:hover { border-color: var(--muted); }
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.bcell { display: grid; grid-template-columns: 44px 1fr; grid-template-rows: auto auto; column-gap: 10px; align-items: center; padding: 10px; border: 1px dashed var(--line); border-radius: 10px; background: var(--sheet); opacity: .62; }
+.bcell.got { opacity: 1; border-style: solid; }
+.bcell .badge { grid-row: span 2; }
+.bcell .bt { font-weight: 600; font-size: 13px; line-height: 1.2; }
+.bcell .bd { font-size: 11.5px; color: var(--muted); line-height: 1.25; }
+.badge { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-family: var(--f-read); font-weight: 700; font-size: 17px; color: var(--muted); border: 2px dashed var(--line); background: var(--soft); }
+.badge.on { color: var(--accent-ink); background: var(--accent); border: 2px solid color-mix(in srgb, var(--accent) 60%, var(--ink)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+.toasts { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 10px; z-index: 50; }
+.toast { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; background: var(--sheet); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px 12px 12px; box-shadow: 0 10px 30px rgba(0,0,0,.18); min-width: 240px; max-width: min(340px, calc(100vw - 32px)); animation: tin .35s cubic-bezier(.2,.9,.3,1.3); transition: opacity .4s, transform .4s; }
+.toast.out { opacity: 0; transform: translateY(10px); }
+@keyframes tin { from { opacity: 0; transform: translateY(20px) scale(.96); } }
+.xpfloat { position: fixed; z-index: 60; transform: translate(-50%, -100%); font-family: var(--f-mono); font-weight: 700; font-size: 15px; color: var(--green); pointer-events: none; animation: xpup 1.2s ease-out forwards; white-space: nowrap; }
+.xpfloat.alt { color: var(--accent); font-size: 13px; }
+@keyframes xpup { from { opacity: 0; margin-top: 6px; } 15% { opacity: 1; } to { opacity: 0; margin-top: -46px; } }
+.burst { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 55; }
+.heat-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.heat-head a { color: var(--blue); text-decoration: none; }
+.heat-wrap { overflow-x: auto; padding-bottom: 2px; }
+.heat { display: grid; grid-auto-flow: column; grid-auto-columns: 13px; gap: 3px; }
+.hcol { display: grid; grid-template-rows: repeat(7, 13px); gap: 3px; }
+.hmonths { display: grid; grid-auto-flow: column; grid-auto-columns: 16px; font-size: 10.5px; color: var(--muted); height: 16px; white-space: nowrap; }
+.heat i, .heat-legend i { display: block; width: 13px; height: 13px; border-radius: 3px; background: var(--line); }
+.l1 { background: color-mix(in srgb, var(--green) 30%, var(--line)) !important; }
+.l2 { background: color-mix(in srgb, var(--green) 55%, var(--line)) !important; }
+.l3 { background: color-mix(in srgb, var(--green) 80%, var(--line)) !important; }
+.l4 { background: var(--green) !important; }
+.heat-legend { display: flex; gap: 4px; align-items: center; margin-top: 8px; }
+.live { display: flex; flex-direction: column; }
+.live-box { border-radius: 8px; overflow: hidden; background: var(--sheet); flex: 1; min-height: 170px; }
+.live-box canvas { display: block; width: 100%; }
+.live-cap { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+.live-f { font-size: 13px; margin-top: 2px; overflow-wrap: anywhere; min-height: 2.6em; }
+.iod-t { font-family: var(--f-read); font-size: 16.5px; line-height: 1.55; }
+.home-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; margin-bottom: 20px; }
+@media (max-width: 860px) { .home-row { grid-template-columns: minmax(0, 1fr); } }
+.combo { color: var(--accent); font-family: var(--f-mono); font-weight: 600; }
+.tile { position: relative; }
+.tile.done::after { content: "✓"; position: absolute; top: 12px; right: 14px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--green); color: var(--sheet); font-size: 12px; font-weight: 700; }
+.tile.here { border-color: var(--accent); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 
@@ -282,6 +325,7 @@ table.rank tr.me td { background: var(--soft); }
       <a href="#rating" data-v="rating">Рейтинг</a>
     </nav>
     <div class="who" id="who">
+      <button class="iconbtn" id="themebtn" type="button" aria-label="Тема">◐</button>
       <span class="xp" id="xpchip">0 XP</span>
       <div class="avatar" id="av">?</div>
       <div class="meta"><b id="uname">Загрузка…</b><small id="umode">подключаемся</small></div>
@@ -778,8 +822,9 @@ function parseAnswer(raw) {
 function close(u, a, tol) {
   if (u == null) return false;
   if (!isFinite(a) || !isFinite(u)) return u === a;
-  const t = tol ?? 1e-3;
-  return Math.abs(u - a) <= Math.max(t, t * Math.abs(a));
+  // принимаем ответ, округлённый до сотых, и относительную погрешность 0,2%
+  const t = Math.max(tol || 0, 0.006, 0.002 * Math.abs(a));
+  return Math.abs(u - a) <= t;
 }
 
 /* ============================================================
@@ -787,6 +832,16 @@ function close(u, a, tol) {
    ============================================================ */
 const det2 = (a, b, c, d) => a * d - b * c;
 const det3 = m => m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+function rankOf(m) {
+  const a = m.map(r => r.slice()); const R = a.length, Cn = a[0].length; let rank = 0;
+  for (let c = 0; c < Cn && rank < R; c++) {
+    let p = rank; while (p < R && Math.abs(a[p][c]) < 1e-9) p++; if (p === R) continue;
+    [a[rank], a[p]] = [a[p], a[rank]];
+    for (let r = 0; r < R; r++) if (r !== rank) { const f = a[r][c] / a[rank][c]; for (let k = c; k < Cn; k++) a[r][k] -= f * a[rank][k]; }
+    rank++;
+  }
+  return rank;
+}
 const texM = (m, br = "vmatrix") => "\\begin{" + br + "}" + m.map(r => r.join("&")).join("\\\\") + "\\end{" + br + "}";
 
 const GEN = {
@@ -807,9 +862,9 @@ const GEN = {
         sol: `$\\Delta=${D}$, $\\Delta_x=${Dx}$, $\\Delta_y=${det2(a, e, c, f)}$; $x=\\frac{\\Delta_x}{\\Delta}=${x}$, $y=\\frac{\\Delta_y}{\\Delta}=${y}$.` }; }],
     ["Ранг матрицы", () => { const r1 = [nz(-3, 3), ri(-3, 3), ri(-3, 3)], r2 = [ri(-3, 3), nz(-3, 3), ri(-3, 3)]; const k = nz(-2, 2), l = ri(-2, 2); const mode = pick([2, 2, 3]);
       let r3 = r1.map((v, i) => k * v + l * r2[i]); if (mode === 3) r3[2] += nz(-2, 2);
-      const m = [r1, r2, r3]; const D = det3(m); let rank = D !== 0 ? 3 : 2;
-      if (rank === 2) { const minors = [det2(r1[0], r1[1], r2[0], r2[1]), det2(r1[0], r1[2], r2[0], r2[2]), det2(r1[1], r1[2], r2[1], r2[2])]; if (minors.every(v => v === 0)) rank = 1; }
-      return { q: `Найдите ранг матрицы $$${texM(m, "pmatrix")}$$`, a: rank, sol: `$\\det=${D}$. ${D !== 0 ? "Определитель не равен нулю, ранг 3." : `Третья строка — линейная комбинация первых двух (${k} и ${l}), ранг ${rank}.`}` }; }],
+      const m = [r1, r2, r3]; const D = det3(m); const rank = rankOf(m);
+      const why = D !== 0 ? "Определитель не равен нулю, ранг 3." : rank === 2 ? "Определитель равен нулю, но есть ненулевой минор 2-го порядка — ранг 2." : rank === 1 ? "Все строки пропорциональны — ранг 1." : "Матрица нулевая — ранг 0.";
+      return { q: `Найдите ранг матрицы $$${texM(m, "pmatrix")}$$`, a: rank, sol: `$\\det=${D}$. ${why}` }; }],
     ["Обратная матрица", () => { let a, b, c, d; do { a = ri(-4, 5); b = ri(-4, 4); c = ri(-4, 4); d = ri(-4, 5); } while (Math.abs(det2(a, b, c, d)) < 1); const D = det2(a, b, c, d); const i = ri(0, 1), j = ri(0, 1);
       const inv = [[d, -b], [-c, a]]; const v = inv[i][j] / D;
       return { q: `Для $A=${texM([[a, b], [c, d]], "pmatrix")}$ найдите элемент $(A^{-1})_{${i + 1}${j + 1}}$ (можно дробью).`, a: v,
@@ -1001,8 +1056,14 @@ const GEN = {
    ============================================================ */
 function cssv(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#888"; }
 function themeCols() { return { ink: cssv("--ink"), muted: cssv("--muted"), line: cssv("--line"), c1: cssv("--accent"), c2: cssv("--blue"), c3: cssv("--green"), red: cssv("--red"), sheet: cssv("--sheet"), soft: cssv("--soft") }; }
+const _alphaCtx = document.createElement("canvas").getContext("2d"); const _alphaMemo = new Map();
 function alpha(col, a) {
-  const c = document.createElement("canvas").getContext("2d"); c.fillStyle = col; const s = c.fillStyle;
+  a = Math.round(Math.max(0, Math.min(1, a)) * 100) / 100; const key = col + "|" + a; const hit = _alphaMemo.get(key); if (hit) return hit;
+  if (_alphaMemo.size > 4000) _alphaMemo.clear();
+  const v = _alphaRaw(col, a); _alphaMemo.set(key, v); return v;
+}
+function _alphaRaw(col, a) {
+  const c = _alphaCtx; c.fillStyle = "#000"; c.fillStyle = col; const s = c.fillStyle;
   if (s.startsWith("#")) { const n = parseInt(s.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; }
   return s.replace(/rgba?\(([^)]+)\)/, (m, g) => { const p = g.split(",").slice(0, 3).join(","); return `rgba(${p},${a})`; });
 }
@@ -1418,7 +1479,7 @@ const VIZ = {
    Аккаунт, сохранение прогресса, офлайн
    ============================================================ */
 const store = { user: null, guest: false, ready: false, tutor: false, offline: false, dirty: false };
-const blankState = () => ({ v: 1, stats: {}, read: {}, exams: [], xp: 0, days: [], last: null, updated: 0 });
+const blankState = () => ({ v: 1, stats: {}, read: {}, exams: [], xp: 0, days: [], last: null, updated: 0, daily: {}, badges: {}, combo: 0, bestCombo: 0, flags: {}, lastCh: null });
 let ST = blankState();
 
 function chStat(n) { return ST.stats[n] || (ST.stats[n] = { ok: 0, tries: 0 }); }
@@ -1508,7 +1569,7 @@ function signedIn(res) {
   if (validState(local) && localDirty && (local.updated || 0) > ((server && server.updated) || 0)) { pick = local; push = true; }
   else if (isEmptyState(server) && !isEmptyState(guest)) { pick = guest; push = true; ls.del(stateKey(null)); }
   ST = Object.assign(blankState(), JSON.parse(JSON.stringify(pick)));
-  store.dirty = push; saveLocal(); renderWho();
+  store.dirty = push; checkBadges(true); saveLocal(); renderWho();
   if (push) pushRemote();
 }
 
@@ -1529,7 +1590,7 @@ async function initStore() {
       if (store.guest) ST = Object.assign(blankState(), ls.get(stateKey(null)) || {});
     }
   }
-  store.ready = true; renderWho(); route();
+  store.ready = true; checkBadges(true); renderWho(); route();
 }
 
 /* ---------- экран входа и регистрации ---------- */
@@ -1563,7 +1624,7 @@ function renderAuth() {
       hideBanner(); signedIn(res); location.hash = location.hash && location.hash !== "#" ? location.hash : "#home"; route();
     } catch (ex) { err.textContent = ex.message; submit.disabled = false; setMode(mode); err.textContent = ex.message; }
   });
-  const guestBtn = h("button", { class: "linkbtn", type: "button", onclick: () => { store.guest = true; setGuest(true); ST = Object.assign(blankState(), ls.get(stateKey(null)) || {}); renderWho(); route(); } }, "Попробовать без регистрации");
+  const guestBtn = h("button", { class: "linkbtn", type: "button", onclick: () => { store.guest = true; setGuest(true); ST = Object.assign(blankState(), ls.get(stateKey(null)) || {}); checkBadges(true); renderWho(); route(); } }, "Попробовать без регистрации");
   setMode("login");
   v.append(h("div", { class: "authwrap" },
     h("section", { class: "card pitch" },
@@ -1597,6 +1658,8 @@ function route() {
   else if (hsh === "rating") CUR.view = "rating";
   else CUR.view = "home";
   document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("on", a.dataset.v === CUR.view));
+  if (CUR.view !== "exam") clearInterval(EX.timer);
+  if (CUR.view === "ch" && ST.lastCh !== CUR.ch) { ST.lastCh = CUR.ch; saveLocal(); }
   ({ home: renderHome, ch: renderChapter, exam: renderExam, rating: renderRating })[CUR.view]();
   window.scrollTo(0, 0);
 }
@@ -1608,7 +1671,7 @@ function ringSVG(p) {
 
 function renderHome() {
   const t = totals(); const all = Object.keys(CH).map(n => mastery(n)); const avg = all.reduce((a, b) => a + b, 0) / all.length;
-  const next = Object.keys(CH).map(Number).find(n => mastery(n) < .99) || 1;
+  const next = (ST.lastCh && CH[ST.lastCh]) ? ST.lastCh : (Object.keys(CH).map(Number).find(n => mastery(n) < .99) || 1);
   const name = store.user ? store.user.name.split(" ")[0] : "";
   const v = view(); v.innerHTML = "";
   const hero = h("div", { class: "hero" },
@@ -1617,7 +1680,7 @@ function renderHome() {
       h("h1", { html: `${name ? esc(name) + ", " : ""}готовимся к <em>высшей математике</em>` }),
       h("p", { class: "small", style: "max-width:60ch;margin:0 0 16px" }, "18 глав по методичке А. А. Нуятова (НГТУ им. Р. Е. Алексеева): теория с ключевыми «Важно», интерактивные графики, задачи с автопроверкой, пробный экзамен и репетитор Алиса. Работает в браузере на компьютере и телефоне, можно установить как приложение."),
       h("div", { style: "display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px" },
-        h("a", { class: "btn primary", href: "#ch-" + next, style: "text-decoration:none" }, `Продолжить: глава ${next}`),
+        h("a", { class: "btn primary", href: "#ch-" + next, style: "text-decoration:none" }, ST.lastCh ? `Продолжить: глава ${next}` : `Начать: глава ${next}`),
         h("a", { class: "btn", href: "#exam", style: "text-decoration:none" }, "Пробный экзамен")),
       h("div", { class: "stats" },
         h("div", { class: "stat" }, h("div", { class: "v" }, String(t.ok)), h("div", { class: "k" }, "задач решено верно")),
@@ -1631,9 +1694,9 @@ function renderHome() {
           : h("p", { class: "small", style: "margin:0" }, "Ещё не было. Экзамен — 10 случайных задач из пройденных глав на время."))));
   const blocks = h("div", { class: "blocks" }, BLOCKS.map(b => h("section", { class: "block" }, h("h2", {}, b.name), h("div", { class: "tiles" }, b.ch.map(n => {
     const s = ST.stats[n] || { ok: 0, tries: 0 }; const m = mastery(n);
-    return h("a", { class: "tile", href: "#ch-" + n }, h("div", { class: "n" }, String(n).padStart(2, "0")), h("div", { class: "t" }, CH[n].title), h("div", { class: "bar" }, h("i", { style: `width:${Math.round(m * 100)}%` })), h("div", { class: "s" }, h("span", {}, `${s.ok} верно из ${s.tries}`), h("span", {}, ST.read[n] ? "прочитано" : CH[n].secs.length + " разд.")));
+    return h("a", { class: "tile" + (m >= .99 ? " done" : "") + (ST.lastCh === n ? " here" : ""), href: "#ch-" + n }, h("div", { class: "n" }, String(n).padStart(2, "0")), h("div", { class: "t" }, CH[n].title), h("div", { class: "bar" }, h("i", { style: `width:${Math.round(m * 100)}%` })), h("div", { class: "s" }, h("span", {}, `${s.ok} верно из ${s.tries}`), h("span", {}, ST.read[n] ? "прочитано" : CH[n].secs.length + " разд.")));
   })))));
-  v.append(hero, blocks);
+  v.append(hero, h("div", { class: "home-row" }, liveFigure(), h("div", { class: "side-stack" }, importantOfDay(), heatmap())), blocks, h("div", { style: "height:18px" }), badgesCard());
 }
 
 function indexNav() {
@@ -1646,7 +1709,7 @@ function renderChapter() {
   const c = CH[CUR.ch]; const v = view(); v.innerHTML = "";
   const sel = h("select", { id: "chsel", "aria-label": "Глава" }, Object.values(CH).map(x => h("option", { value: x.n }, `${x.n}. ${x.title}`))); sel.value = c.n; sel.addEventListener("change", () => location.hash = "#ch-" + sel.value);
   const tabs = h("div", { class: "tabs", role: "tablist" }, [["theory", "Теория"], ["viz", "Визуализация"], ["practice", "Практика"], ["ai", "Алиса — репетитор"]].map(([k, t]) =>
-    h("button", { class: CUR.tab === k ? "on" : "", role: "tab", onclick: e => { CUR.tab = k; const me = e.currentTarget; tabs.querySelectorAll("button").forEach(b => b.classList.toggle("on", b === me)); renderPane(); } }, t)));
+    h("button", { class: CUR.tab === k ? "on" : "", role: "tab", "aria-selected": String(CUR.tab === k), onclick: e => { CUR.tab = k; const me = e.currentTarget; tabs.querySelectorAll("button").forEach(b => { b.classList.toggle("on", b === me); b.setAttribute("aria-selected", String(b === me)); }); renderPane(); } }, t)));
   const sheet = h("article", { class: "sheet" },
     h("div", { class: "sheet-head" }, h("div", { class: "eyebrow" }, `ГЛАВА ${c.n} / 18`), h("h1", {}, c.title)), tabs, h("div", { class: "pane", id: "pane" }));
   v.append(h("div", { class: "chsel" }, sel), h("div", { class: "frame" }, indexNav(), sheet));
@@ -1660,7 +1723,7 @@ function renderPane() {
     pane.append(h("div", { class: "theory", html: c.theory }));
     if (c.imp.length) pane.append(h("div", { class: "important" }, c.imp.map(([k, t]) => h("div", { class: "imp", html: `<b>${k}</b>${t}` }))));
     const done = !!ST.read[c.n];
-    const b = h("button", { class: "btn " + (done ? "" : "primary"), style: "margin-top:22px", disabled: done ? "" : false, onclick: () => { if (ST.read[c.n]) return; ST.read[c.n] = true; ST.xp += 3; touch(); b.textContent = "Глава прочитана ✓"; b.disabled = true; b.classList.remove("primary"); } }, done ? "Глава прочитана ✓" : "Отметить главу прочитанной (+3 XP)");
+    const b = h("button", { class: "btn " + (done ? "" : "primary"), style: "margin-top:22px", disabled: done ? "" : false, onclick: () => { if (ST.read[c.n]) return; ST.read[c.n] = true; ST.xp += 3; touch(); checkBadges(); floatText("+3 XP", b); b.textContent = "Глава прочитана ✓"; b.disabled = true; b.classList.remove("primary"); } }, done ? "Глава прочитана ✓" : "Отметить главу прочитанной (+3 XP)");
     pane.append(h("div", { style: "display:flex;gap:8px;flex-wrap:wrap" }, b, h("button", { class: "btn ghost", style: "margin-top:22px", onclick: () => { CUR.tab = "practice"; renderChapter(); } }, "Перейти к задачам →")));
     typeset(pane);
   } else if (CUR.tab === "viz") {
@@ -1673,19 +1736,24 @@ function renderPane() {
 }
 
 /* ---------- Практика ---------- */
+function pstats(n) {
+  const s = chStat(n); const c = ST.combo || 0;
+  return h("div", { class: "pstats" }, h("span", {}, "Верно: ", h("b", {}, String(s.ok))), h("span", {}, "Попыток: ", h("b", {}, String(s.tries))), h("span", {}, "Освоение главы: ", h("b", {}, Math.round(mastery(n) * 100) + "%")),
+    c >= 2 ? h("span", { class: "combo" }, `серия верных: ×${c}`) : null, h("span", {}, "Рекорд серии: ", h("b", {}, String(ST.bestCombo || 0))));
+}
 const PR = { kind: 0, cur: null, answered: false, ch: null };
 function renderPractice(pane, n) {
   if (PR.ch !== n) { PR.ch = n; PR.kind = -1; PR.cur = null; }
   const gens = GEN[n]; const s = chStat(n);
-  pane.append(h("div", { class: "pstats" }, h("span", {}, "Верно: ", h("b", {}, String(s.ok))), h("span", {}, "Попыток: ", h("b", {}, String(s.tries))), h("span", {}, "Освоение главы: ", h("b", {}, Math.round(mastery(n) * 100) + "%"))));
+  pane.append(pstats(n));
   pane.append(h("div", { class: "kinds" }, [h("button", { class: "chip" + (PR.kind === -1 ? " on" : ""), onclick: () => { PR.kind = -1; PR.cur = null; renderPane(); } }, "Вперемешку"),
     ...gens.map(([t], i) => h("button", { class: "chip" + (PR.kind === i ? " on" : ""), onclick: () => { PR.kind = i; PR.cur = null; renderPane(); } }, t))]));
   if (!PR.cur) { const i = PR.kind === -1 ? ri(0, gens.length - 1) : PR.kind; PR.cur = Object.assign({ title: gens[i][0] }, gens[i][1]()); PR.answered = false; }
   pane.append(problemCard(PR.cur, {
-    onResult: ok => { const st = chStat(n); st.tries++; if (ok) { st.ok++; ST.xp += 10; } touch(); const ps = pane.querySelector(".pstats"); if (ps) ps.innerHTML = `<span>Верно: <b>${st.ok}</b></span><span>Попыток: <b>${st.tries}</b></span><span>Освоение главы: <b>${Math.round(mastery(n) * 100)}%</b></span>`; },
+    onResult: (ok, u, anchor) => { recordAnswer(n, ok, 10, anchor); const ps = pane.querySelector(".pstats"); if (ps) ps.replaceWith(pstats(n)); },
     onNext: () => { PR.cur = null; renderPane(); }, ch: n
   }));
-  pane.append(h("p", { class: "small", style: "margin-top:14px" }, "Ответ — число: целое, десятичная дробь (2,5), обычная дробь (3/4) или выражение: 2pi, sqrt(2), e^2. Для расходящихся интегралов введите ∞ или inf."));
+  pane.append(h("p", { class: "small", style: "margin-top:14px" }, "Ответ — число: целое, десятичная дробь (2,5 — можно округлить до сотых), обычная дробь (3/4) или выражение: 2pi, sqrt(2), e^2. Для расходящихся интегралов введите ∞ или inf."));
 }
 
 function problemCard(p, { onResult, onNext, ch, examMode }) {
@@ -1700,7 +1768,7 @@ function problemCard(p, { onResult, onNext, ch, examMode }) {
     verdict.className = "verdict " + (ok ? "ok" : "bad");
     verdict.innerHTML = `<div><b>${ok ? "Верно!" : "Неверно."}</b> Правильный ответ: <span class="mono">${fmt(p.a, 4)}</span></div><div class="sol">${p.sol}</div>`;
     if (!ok && !examMode && store.tutor) verdict.append(h("div", {}, h("button", { class: "btn", onclick: () => { CUR.tab = "ai"; CHAT.pending = `Разбери, пожалуйста, мою ошибку. Задача: ${stripTags(p.q)}\nМой ответ: ${inp.value}\nПравильный ответ: ${fmt(p.a, 4)}\nКраткое решение: ${stripTags(p.sol)}`; renderChapter(); } }, "Спросить Алису, где ошибка")));
-    typeset(verdict); onResult(ok, u); next.focus();
+    typeset(verdict); onResult(ok, u, check); next.focus();
   };
   check.addEventListener("click", submit); inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); done ? next.click() : submit(); } });
   const card = h("div", { class: "prob" }, h("div", { class: "tag" }, (ch ? `Глава ${ch} · ` : "") + (p.title || "")), h("div", { class: "q", html: p.q }), h("div", { class: "ansrow" }, inp, check, next), verdict);
@@ -1796,7 +1864,7 @@ function renderExam() {
   const p = EX.list[EX.i];
   v.append(h("div", { class: "card", style: "max-width:900px" },
     h("div", { class: "exam-top" }, h("b", {}, `Задача ${EX.i + 1} из ${EX.list.length}`), dots, tm),
-    problemCard(p, { examMode: true, ch: p.ch, onResult: ok => { EX.res.push(ok); const st = chStat(p.ch); st.tries++; if (ok) { st.ok++; ST.xp += 15; } touch(); dots.children[EX.i].className = ok ? "ok" : "bad"; }, onNext: () => { EX.i++; renderExam(); } }),
+    problemCard(p, { examMode: true, ch: p.ch, onResult: (ok, u, anchor) => { EX.res.push(ok); recordAnswer(p.ch, ok, 15, anchor); dots.children[EX.i].className = ok ? "ok" : "bad"; }, onNext: () => { EX.i++; renderExam(); } }),
     h("div", { style: "margin-top:14px" }, h("button", { class: "btn ghost", onclick: () => { EX.on = false; clearInterval(EX.timer); renderExam(); } }, "Прервать экзамен"))));
 }
 function startExam(chs) {
@@ -1807,6 +1875,7 @@ function startExam(chs) {
 function finishExam() {
   clearInterval(EX.timer); const score = EX.res.filter(Boolean).length, total = EX.list.length, secs = (Date.now() - EX.t0) / 1000;
   ST.exams.push({ date: today(), score, total, secs: Math.round(secs) }); if (ST.exams.length > 50) ST.exams = ST.exams.slice(-50); touch(); EX.on = false;
+  if (score === total) burst(); setTimeout(() => checkBadges(), 400);
   const byCh = {}; EX.list.forEach((p, i) => { (byCh[p.ch] = byCh[p.ch] || [0, 0]); byCh[p.ch][1]++; if (EX.res[i]) byCh[p.ch][0]++; });
   const weak = Object.entries(byCh).filter(([, [a, b]]) => a < b).map(([n]) => +n);
   const v = view(); v.innerHTML = "";
@@ -1842,6 +1911,178 @@ async function renderRating() {
     empty(e.offline ? "Нет связи с сервером — рейтинг появится, когда вернётся интернет." : "Не удалось загрузить рейтинг: " + e.message);
   }
 }
+
+/* ============================================================
+   Ответы, награды, активность, анимации
+   ============================================================ */
+function recordAnswer(ch, ok, xp, anchor) {
+  const st = chStat(ch); st.tries++;
+  const d = today(); ST.daily = ST.daily || {}; ST.daily[d] = (ST.daily[d] || 0) + 1;
+  const keys = Object.keys(ST.daily); if (keys.length > 200) for (const k of keys.sort().slice(0, keys.length - 200)) delete ST.daily[k];
+  if (ok) {
+    st.ok++; ST.xp += xp; ST.combo = (ST.combo || 0) + 1; ST.bestCombo = Math.max(ST.bestCombo || 0, ST.combo);
+    floatText(`+${xp} XP`, anchor);
+    if (ST.combo >= 3) setTimeout(() => floatText(`серия ×${ST.combo}`, anchor, true), 260);
+    if (new Date().getHours() < 5) (ST.flags = ST.flags || {}).night = true;
+  } else ST.combo = 0;
+  touch(); checkBadges();
+}
+
+const readCount = () => Object.keys(ST.read).length;
+const blockDone = i => BLOCKS[i].ch.every(n => mastery(n) >= .99);
+const BADGES = [
+  { id: "first", icon: "∑", t: "Первый шаг", d: "Решить первую задачу", test: () => totals().ok >= 1 },
+  { id: "ten", icon: "10", t: "Десятка", d: "10 верных ответов", test: () => totals().ok >= 10 },
+  { id: "fifty", icon: "50", t: "Полсотни", d: "50 верных ответов", test: () => totals().ok >= 50 },
+  { id: "hundred", icon: "10²", t: "Сотня", d: "100 верных ответов", test: () => totals().ok >= 100 },
+  { id: "combo5", icon: "×5", t: "В ударе", d: "5 верных ответов подряд", test: () => (ST.bestCombo || 0) >= 5 },
+  { id: "combo10", icon: "×10", t: "Неудержимый", d: "10 верных ответов подряд", test: () => (ST.bestCombo || 0) >= 10 },
+  { id: "reader", icon: "§", t: "Читатель", d: "Прочитать 6 глав", test: () => readCount() >= 6 },
+  { id: "scholar", icon: "¶", t: "Эрудит", d: "Прочитать все 18 глав", test: () => readCount() >= 18 },
+  { id: "exam", icon: "✓", t: "Зачёт", d: "7 из 10 на пробном экзамене", test: () => ST.exams.some(e => e.score >= 7) },
+  { id: "perfect", icon: "★", t: "Отличник", d: "10 из 10 на пробном экзамене", test: () => ST.exams.some(e => e.score === e.total && e.total >= 10) },
+  { id: "blitz", icon: "⏱", t: "Блиц", d: "8 из 10 на экзамене быстрее 10 минут", test: () => ST.exams.some(e => e.score >= 8 && e.secs < 600) },
+  { id: "streak3", icon: "3д", t: "Привычка", d: "Заниматься 3 дня подряд", test: () => streak() >= 3 },
+  { id: "streak7", icon: "7д", t: "Неделя без пропусков", d: "Заниматься 7 дней подряд", test: () => streak() >= 7 },
+  { id: "linalg", icon: "⊗", t: "Линейщик", d: "Освоить блок «Линейная алгебра и геометрия»", test: () => blockDone(0) },
+  { id: "calc", icon: "∫", t: "Аналитик", d: "Освоить блок «Функции одной переменной»", test: () => blockDone(2) },
+  { id: "all", icon: "Ω", t: "Магистр", d: "Освоить все 18 глав", test: () => Object.keys(CH).every(n => mastery(n) >= .99) },
+  { id: "night", icon: "☾", t: "Сова", d: "Решить задачу после полуночи", test: () => !!(ST.flags && ST.flags.night) }
+];
+function checkBadges(silent) {
+  ST.badges = ST.badges || {}; const fresh = [];
+  for (const b of BADGES) if (!ST.badges[b.id] && b.test()) { ST.badges[b.id] = today(); fresh.push(b); }
+  if (!fresh.length) return;
+  saveLocal(); clearTimeout(saveTimer); saveTimer = setTimeout(pushRemote, 1200); store.dirty = !!store.user;
+  if (silent) return;
+  fresh.forEach((b, i) => setTimeout(() => toast(b), i * 700));
+  burst();
+}
+
+function toast(b) {
+  let box = $("#toasts"); if (!box) { box = h("div", { id: "toasts", class: "toasts", "aria-live": "polite" }); document.body.append(box); }
+  const el = h("div", { class: "toast" }, h("div", { class: "badge on" }, b.icon), h("div", {}, h("div", { class: "small" }, "Новая награда"), h("b", {}, b.t), h("div", { class: "small" }, b.d)));
+  box.append(el); setTimeout(() => el.classList.add("out"), 4200); setTimeout(() => el.remove(), 4700);
+}
+
+function floatText(text, anchor, alt) {
+  if (!anchor || !anchor.isConnected || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const r = anchor.getBoundingClientRect();
+  const el = h("div", { class: "xpfloat" + (alt ? " alt" : "") }, text);
+  el.style.left = (r.left + r.width / 2) + "px"; el.style.top = (r.top - 6) + "px";
+  document.body.append(el); setTimeout(() => el.remove(), 1300);
+}
+
+function burst() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cv = h("canvas", { class: "burst" }); document.body.append(cv);
+  const W = innerWidth, H = innerHeight, dpr = devicePixelRatio || 1; cv.width = W * dpr; cv.height = H * dpr; const ctx = cv.getContext("2d"); ctx.scale(dpr, dpr);
+  const C = themeCols(); const cols = [C.c1, C.c2, C.c3]; const sym = "∫∑π∞√∂Δλεφ∇≈";
+  const ps = Array.from({ length: 70 }, () => ({ x: W / 2 + (Math.random() - .5) * 120, y: H * .55, vx: (Math.random() - .5) * 13, vy: -6 - Math.random() * 11, r: Math.random() * 6, vr: (Math.random() - .5) * .3, s: 16 + Math.random() * 18, ch: sym[Math.floor(Math.random() * sym.length)], c: cols[Math.floor(Math.random() * 3)] }));
+  const t0 = performance.now();
+  (function frame(t) {
+    const k = (t - t0) / 1600; ctx.clearRect(0, 0, W, H);
+    for (const p of ps) { p.x += p.vx; p.y += p.vy; p.vy += .35; p.r += p.vr; ctx.save(); ctx.globalAlpha = Math.max(0, 1 - k); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.font = `700 ${p.s}px ${cssv("--f-read")}`; ctx.textAlign = "center"; ctx.fillText(p.ch, 0, 0); ctx.restore(); }
+    if (k < 1) requestAnimationFrame(frame); else cv.remove();
+  })(t0);
+}
+
+/* карта активности: 18 недель */
+function heatmap() {
+  const daily = Object.assign({}, ST.daily || {}); for (const d of ST.days) if (!daily[d]) daily[d] = 1;
+  const weeks = 18; const end = new Date(); const start = new Date(end); start.setDate(end.getDate() - (weeks * 7 - 1));
+  // начинаем с понедельника
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  const grid = h("div", { class: "heat", role: "img", "aria-label": "Активность по дням" });
+  let total = 0, active = 0; const months = [];
+  for (let w = 0; ; w++) {
+    const col = h("div", { class: "hcol" }); let any = false;
+    for (let d = 0; d < 7; d++) {
+      const day = new Date(start); day.setDate(start.getDate() + w * 7 + d); if (day > end) break; any = true;
+      const key = day.toISOString().slice(0, 10); const n = daily[key] || 0; total += n; if (n) active++;
+      const lvl = n === 0 ? 0 : n < 3 ? 1 : n < 6 ? 2 : n < 11 ? 3 : 4;
+      col.append(h("i", { class: "l" + lvl, title: `${day.toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}: ${n ? n + " задач" : "нет занятий"}` }));
+      if (d === 0 && day.getDate() <= 7) months.push([w, day.toLocaleDateString("ru-RU", { month: "short" }).replace(".", "")]);
+    }
+    if (!any) break; grid.append(col);
+  }
+  const mrow = h("div", { class: "hmonths" }); for (const [w, m] of months) { const s = h("span", {}, m); s.style.gridColumnStart = w + 1; mrow.append(s); }
+  return h("div", { class: "card" }, h("div", { class: "heat-head" }, h("div", { class: "small" }, "Активность"), h("div", { class: "small mono" }, `${active} дн. · ${total} задач`)),
+    h("div", { class: "heat-wrap" }, mrow, grid),
+    h("div", { class: "heat-legend small" }, "меньше", ...[0, 1, 2, 3, 4].map(l => h("i", { class: "l" + l })), "больше"));
+}
+
+function badgesCard() {
+  const got = ST.badges || {}; const n = BADGES.filter(b => got[b.id]).length;
+  return h("section", { class: "block" }, h("h2", {}, `Награды · ${n} из ${BADGES.length}`), h("div", { class: "badges" }, BADGES.map(b =>
+    h("div", { class: "bcell" + (got[b.id] ? " got" : ""), title: b.d + (got[b.id] ? " — получено " + got[b.id] : "") }, h("div", { class: "badge" + (got[b.id] ? " on" : "") }, b.icon), h("div", { class: "bt" }, b.t), h("div", { class: "bd" }, b.d)))));
+}
+
+/* живой график на главной: многочлены Тейлора */
+function liveFigure() {
+  const fig = h("div", { class: "card live" });
+  const cap = h("div", { class: "live-cap" }); const formula = h("div", { class: "live-f mono" });
+  const box = h("div", { class: "live-box" }); const cv = h("canvas"); box.append(cv);
+  fig.append(h("div", { class: "heat-head" }, h("div", { class: "small" }, "Живая формула · глава 14"), h("a", { class: "small", href: "#ch-14" }, "открыть →")), box, cap, formula);
+  const fact = n => { let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; };
+  const FN = [
+    { name: "sin x", f: Math.sin, c: k => k % 2 ? ((k - 1) / 2 % 2 ? -1 : 1) / fact(k) : 0, term: k => k % 2 ? `${(k - 1) / 2 % 2 ? "−" : "+"} x${sup(k)}/${k}!` : "" },
+    { name: "cos x", f: Math.cos, c: k => k % 2 ? 0 : (k / 2 % 2 ? -1 : 1) / fact(k), term: k => k % 2 ? "" : `${k / 2 % 2 ? "−" : "+"} x${sup(k)}/${k}!` },
+    { name: "eˣ", f: Math.exp, c: k => 1 / fact(k), term: k => `+ x${sup(k)}/${k}!` }
+  ];
+  function sup(k) { return k < 2 ? (k ? "" : "⁰") : String(k).split("").map(d => "⁰¹²³⁴⁵⁶⁷⁸⁹"[d]).join(""); }
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let fi = 0, deg = reduce ? 7 : 0, last = 0, shown = deg;
+  function draw(t) {
+    if (!fig.isConnected) { if (fig._started) return; }
+    else fig._started = true;
+    const W = Math.max(200, box.clientWidth), H = Math.max(170, Math.min(320, box.clientHeight || 170)), dpr = devicePixelRatio || 1;
+    if (cv.width !== W * dpr || cv.height !== H * dpr) { cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + "px"; }
+    const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); const C = themeCols(); const F = FN[fi];
+    if (!reduce && t - last > 650) { last = t; deg++; if (deg > 15) { deg = 0; fi = (fi + 1) % FN.length; } }
+    shown += (deg - shown) * .12; if (Math.abs(deg - shown) < .01 || deg < shown) shown = deg;
+    const X = x => (x + 7) / 14 * W, Y = y => H / 2 - y * (H / 6);
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = alpha(C.line, .9); ctx.lineWidth = 1; ctx.beginPath(); for (let x = -7; x <= 7; x++) { ctx.moveTo(X(x) + .5, 0); ctx.lineTo(X(x) + .5, H); } for (let y = -3; y <= 3; y++) { ctx.moveTo(0, Y(y) + .5); ctx.lineTo(W, Y(y) + .5); } ctx.stroke();
+    ctx.strokeStyle = C.muted; ctx.beginPath(); ctx.moveTo(0, Y(0) + .5); ctx.lineTo(W, Y(0) + .5); ctx.moveTo(X(0) + .5, 0); ctx.lineTo(X(0) + .5, H); ctx.stroke();
+    const plot = (f, col, w) => { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); let pen = false; for (let i = 0; i <= W; i += 2) { const x = -7 + 14 * i / W; const y = f(x); if (!isFinite(y) || Math.abs(y) > 8) { pen = false; continue; } pen ? ctx.lineTo(i, Y(y)) : ctx.moveTo(i, Y(y)); pen = true; } ctx.stroke(); };
+    plot(F.f, C.c2, 3);
+    const n = Math.floor(shown), frac = shown - n;
+    const T = (x, m) => { let s = 0, p = 1; for (let k = 0; k <= m; k++) { s += F.c(k) * p; p *= x; } return s; };
+    plot(x => T(x, n) * (1 - frac) + T(x, n + 1) * frac, C.c1, 2.4);
+    let terms = ""; for (let k = 0; k <= deg; k++) { const s = F.term(k); if (s) terms += " " + s; }
+    terms = terms.trim().replace(/^\+ /, "").replace("x⁰/0!", "1").replace("+ x/1!", "+ x").replace(/^x\/1!/, "x");
+    cap.textContent = `${F.name} и её многочлен Тейлора степени ${deg}`;
+    formula.textContent = `T${String(deg).split("").map(d => "₀₁₂₃₄₅₆₇₈₉"[d]).join("")}(x) = ${terms.length > 70 ? terms.slice(0, 70) + "…" : terms}`;
+    if ((fig.isConnected || !fig._started) && (!reduce || !fig._started)) requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+  return fig;
+}
+
+function importantOfDay() {
+  const all = []; for (const c of Object.values(CH)) for (const [k, t] of c.imp) all.push([c, k, t]);
+  const d = new Date(); const idx = (d.getFullYear() * 400 + d.getMonth() * 31 + d.getDate()) % all.length;
+  const [c, k, t] = all[idx];
+  const el = h("div", { class: "card iod" }, h("div", { class: "heat-head" }, h("div", { class: "eyebrow" }, "ВАЖНО ДНЯ · " + k.toUpperCase()), h("a", { class: "small", href: "#ch-" + c.n }, `глава ${c.n} →`)), h("div", { class: "iod-t", html: t }));
+  typeset(el); return el;
+}
+
+/* тема */
+const THEMES = ["auto", "light", "dark"];
+const THEME_ICONS = {
+  auto: '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>',
+  light: '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg>',
+  dark: '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="currentColor"/></svg>'
+};
+function applyTheme(t) {
+  if (t === "auto") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+  const b = $("#themebtn"); if (b) { b.innerHTML = THEME_ICONS[t]; b.title = "Тема: " + { auto: "как в системе", light: "светлая", dark: "тёмная" }[t]; b.setAttribute("aria-label", b.title); }
+}
+function rerenderVisuals() { if (CUR.view === "ch" && CUR.tab === "viz") renderPane(); }
+applyTheme(ls.get("hm-theme") || "auto");
+$("#themebtn").addEventListener("click", () => { const cur = ls.get("hm-theme") || "auto"; const nxt = THEMES[(THEMES.indexOf(cur) + 1) % 3]; ls.set("hm-theme", nxt); applyTheme(nxt); rerenderVisuals(); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if ((ls.get("hm-theme") || "auto") === "auto") rerenderVisuals(); });
 
 /* ---------- старт ---------- */
 initStore();
