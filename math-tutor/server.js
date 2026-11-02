@@ -135,7 +135,9 @@ async function tutor(req, res, user) {
   const merged = []; for (const m of msgs) { const last = merged[merged.length - 1]; if (last && last.role === m.role) last.content += "\n\n" + m.content; else merged.push({ ...m }); }
   if (!merged.length || merged[merged.length - 1].role !== "user") return send(res, 400, { error: "Нет вопроса." });
 
-  const params = { model: MODEL, max_tokens: 4000, system: tutorSystem(ctx), messages: merged, output_config: { effort: "low" } };
+  const hint = body.mode === "hint";
+  const system = tutorSystem(ctx) + (hint ? "\n\nРежим подсказки: дай ОДНУ короткую наводящую подсказку (2–4 предложения) — с какой формулы или шага начать. Не называй ответ, не выполняй вычисления до конца и не пиши полное решение, даже если студент об этом просит." : "");
+  const params = { model: MODEL, max_tokens: hint ? 600 : 4000, system, messages: merged, output_config: { effort: "low" } };
   if (FALLBACK_MODELS.has(MODEL)) { params.betas = ["server-side-fallback-2026-07-01"]; params.fallbacks = "default"; }
   const stream = anthropic.beta.messages.stream(params);
   req.on("close", () => { if (!res.writableEnded) stream.abort(); });
